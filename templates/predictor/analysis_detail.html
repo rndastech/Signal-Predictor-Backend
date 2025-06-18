@@ -1,0 +1,114 @@
+{% extends 'base.html' %}
+
+{% block title %}Analysis #{{ analysis.id }} - Signal Predictor{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-12">
+        <div class="card">
+            <div class="card-header">
+                <h4 class="mb-0">
+                    <i class="fas fa-chart-line"></i> Analysis #{{ analysis.id }}
+                    <small class="text-muted">{{ analysis.created_at|date:"M d, Y H:i" }}</small>
+                </h4>
+            </div>
+            <div class="card-body">
+                
+                <!-- Fitted Function -->
+                <div class="mb-4">
+                    <h5><i class="fas fa-function"></i> Fitted Function</h5>
+                    <div class="function-display">
+                        {{ analysis.fitted_function }}
+                    </div>
+                </div>
+                
+                <!-- Parameters -->
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        <h5><i class="fas fa-cog"></i> Model Parameters</h5>
+                        {% for component in analysis.parameters.sinusoidal_components %}
+                        <div class="parameter-box">
+                            <strong>Component {{ forloop.counter }}:</strong><br>
+                            <small>
+                                Amplitude: {{ component.amplitude }}<br>
+                                Frequency: {{ component.frequency }}<br>
+                                Phase: {{ component.phase }}
+                            </small>
+                        </div>
+                        {% endfor %}
+                        <div class="parameter-box">
+                            <strong>Offset:</strong> {{ analysis.parameters.offset }}
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <h5><i class="fas fa-wave-square"></i> Dominant Frequencies</h5>
+                        {% for freq, amp in analysis.dominant_frequencies %}
+                        <div class="parameter-box">
+                            <strong>Frequency:</strong> {{ freq|floatformat:3 }}<br>
+                            <strong>Amplitude:</strong> {{ amp|floatformat:3 }}
+                        </div>
+                        {% endfor %}
+                        
+                        {% if analysis.mse %}
+                        <div class="alert alert-info mt-3">
+                            <strong>Mean Squared Error:</strong> {{ analysis.mse|floatformat:6 }}
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <!-- Function Evaluator -->
+                <div class="mb-4">
+                    <h5><i class="fas fa-calculator"></i> Evaluate Function</h5>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <form id="evalForm">
+                                {% csrf_token %}
+                                <div class="input-group">
+                                    {{ eval_form.x_value }}
+                                    <button type="submit" class="btn btn-outline-primary">
+                                        Calculate
+                                    </button>
+                                </div>
+                                <small class="form-text text-muted">{{ eval_form.x_value.help_text }}</small>
+                            </form>
+                        </div>
+                        <div class="col-md-6">
+                            <div id="evalResult" class="alert alert-success" style="display: none;">
+                                <strong>Result:</strong> <span id="resultValue"></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="d-flex gap-2">
+                    <a href="{% url 'upload_csv' %}" class="btn btn-primary">
+                        <i class="fas fa-upload"></i> Analyze Another Signal
+                    </a>
+                    <a href="{% url 'analysis_list' %}" class="btn btn-outline-secondary">
+                        <i class="fas fa-list"></i> All Analyses
+                    </a>
+                    <a href="{% url 'home' %}" class="btn btn-outline-secondary">
+                        <i class="fas fa-home"></i> Home
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    $('#evalForm').on('submit', function(e) {
+        e.preventDefault();
+        
+        // Note: This won't work for stored analyses since we don't have the parameters in session
+        // We'd need to modify the backend to handle this case
+        alert('Function evaluation is only available for the current analysis session. Please re-run the analysis to evaluate the function.');
+    });
+});
+</script>
+{% endblock %}

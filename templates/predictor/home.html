@@ -1,0 +1,108 @@
+{% extends 'base.html' %}
+
+{% block title %}Home - Signal Predictor{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-8 mx-auto">
+        <div class="card">
+            <div class="card-body text-center">
+                <h1 class="card-title mb-4">
+                    <i class="fas fa-wave-square text-primary"></i>
+                    Signal Predictor
+                </h1>
+                <p class="card-text lead mb-4">
+                    Analyze time-series signals using Fourier Transform and multi-sinusoidal curve fitting.
+                    Upload your CSV data and get detailed signal analysis with predictive modeling.
+                </p>
+                
+                <div class="row mt-4">
+                    <div class="col-md-6 mb-3">
+                        <div class="card h-100">
+                            <div class="card-body">
+                                <i class="fas fa-upload fa-3x text-primary mb-3"></i>
+                                <h5 class="card-title">Upload Signal Data</h5>
+                                <p class="card-text">Upload a CSV file with your signal data (x, y columns) and get instant analysis.</p>
+                                <a href="{% url 'upload_csv' %}" class="btn btn-primary">
+                                    <i class="fas fa-upload"></i> Upload CSV
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <div class="card h-100">
+                            <div class="card-body">
+                                <i class="fas fa-chart-line fa-3x text-success mb-3"></i>
+                                <h5 class="card-title">View Past Analyses</h5>
+                                <p class="card-text">Browse and review your previous signal analysis results and fitted functions.</p>
+                                <a href="{% url 'analysis_list' %}" class="btn btn-success">
+                                    <i class="fas fa-list"></i> View Analyses
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% if recent_analyses %}
+<div class="row mt-4">
+    <div class="col-lg-8 mx-auto">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-clock"></i> Recent Analyses</h5>
+            </div>
+            <div class="card-body">
+                <div class="list-group list-group-flush">
+                    {% for analysis in recent_analyses %}
+                    <div class="list-group-item d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="mb-1">Analysis #{{ analysis.id }}</h6>
+                            <p class="mb-1 text-muted">{{ analysis.created_at|date:"M d, Y H:i" }}</p>
+                            {% if analysis.mse %}
+                                <small class="text-success">MSE: {{ analysis.mse|floatformat:6 }}</small>
+                            {% endif %}
+                        </div>
+                        <a href="{% url 'analysis_detail' analysis.id %}" class="btn btn-outline-primary btn-sm">
+                            View Details
+                        </a>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<div class="row mt-4">
+    <div class="col-lg-8 mx-auto">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-info-circle"></i> How It Works</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-4 text-center mb-3">
+                        <i class="fas fa-file-csv fa-2x text-primary mb-2"></i>
+                        <h6>1. Upload Data</h6>
+                        <p class="small">Upload a CSV with 'x' and 'y' columns</p>
+                    </div>
+                    <div class="col-md-4 text-center mb-3">
+                        <i class="fas fa-cogs fa-2x text-warning mb-2"></i>
+                        <h6>2. FFT Analysis</h6>
+                        <p class="small">Fourier Transform finds dominant frequencies</p>
+                    </div>
+                    <div class="col-md-4 text-center mb-3">
+                        <i class="fas fa-chart-area fa-2x text-success mb-2"></i>
+                        <h6>3. Curve Fitting</h6>
+                        <p class="small">Multi-sinusoidal model reconstruction</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
