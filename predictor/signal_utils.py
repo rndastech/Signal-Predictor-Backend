@@ -3,6 +3,7 @@ import pandas as pd
 from scipy.fft import fft, fftfreq
 from scipy.signal import find_peaks
 from scipy.optimize import curve_fit
+from scipy.optimize import differential_evolution  # added for global optimization
 import matplotlib
 matplotlib.use('Agg')  # Use non-interactive backend
 import matplotlib.pyplot as plt
@@ -10,6 +11,189 @@ from sklearn.metrics import mean_squared_error
 import io
 import base64
 import math
+import random
+
+
+class SignalGenerator:
+    """Generate synthetic sinusoidal signals with customizable parameters"""
+    
+    def __init__(self):
+        self.last_generated_params = None
+    
+    def generate_signal(self, x_start=0, x_end=50, num_points=1000, 
+                       sinusoid_params=None, offset=0, noise_level=0, 
+                       use_random=False, num_sinusoids=3):
+        """
+        Generate a synthetic signal based on multiple sinusoids
+        
+        Args:
+            x_start: Starting x value
+            x_end: Ending x value  
+            num_points: Number of data points
+            sinusoid_params: List of tuples (amplitude, frequency, phase) for each sinusoid
+            offset: DC offset
+            noise_level: Standard deviation of Gaussian noise
+            use_random: If True, generate random parameters
+            num_sinusoids: Number of sinusoids when using random parameters
+            
+        Returns:
+            pandas DataFrame with 'x' and 'y' columns
+        """
+        try:
+            # Generate x values
+            x = np.linspace(x_start, x_end, num_points)
+            
+            # Initialize y with offset
+            y = np.full_like(x, offset)
+            
+            # Generate or use provided sinusoid parameters
+            if use_random:
+                params = self._generate_random_parameters(num_sinusoids)
+            else:
+                params = sinusoid_params if sinusoid_params else [(1.0, 0.1, 0)]
+            
+            self.last_generated_params = {
+                'sinusoids': params,
+                'offset': offset,
+                'noise_level': noise_level,
+                'x_range': (x_start, x_end),
+                'num_points': num_points
+            }
+            
+            # Add each sinusoidal component
+            for amplitude, frequency, phase in params:
+                y += amplitude * np.sin(2 * np.pi * frequency * x + phase)
+              # Add noise if specified
+            if noise_level > 0:
+                rng = np.random.default_rng()
+                noise = rng.normal(0, noise_level, size=len(x))
+                y += noise
+            
+            # Create DataFrame
+            df = pd.DataFrame({
+                'x': x,
+                'y': y
+            })
+            
+            return {
+                'success': True,
+                'data': df,
+                'parameters': self.last_generated_params,
+                'function_string': self._generate_function_string(params, offset)
+            }
+            
+        except Exception as e:
+            return {
+                'success': False,
+                'error': str(e)
+            }
+    
+    def _generate_random_parameters(self, num_sinusoids):
+        """Generate random parameters for sinusoids"""
+        params = []
+        for _ in range(num_sinusoids):
+            # Random amplitude between 0.1 and 2.0
+            amplitude = random.uniform(0.1, 2.0)
+            # Random frequency between 0.01 and 0.5
+            frequency = random.uniform(0.01, 0.5)
+            # Random phase between -π and π
+            phase = random.uniform(-math.pi, math.pi)
+            params.append((amplitude, frequency, phase))
+        return params
+    
+    def _generate_function_string(self, params, offset):
+        """Generate human-readable function string"""
+        function_str = "f(x) = "
+        
+        for i, (amplitude, frequency, phase) in enumerate(params):
+            if i > 0:
+                function_str += " + "
+            function_str += f"{amplitude:.3f} * sin(2π * {frequency:.3f} * x + {phase:.3f})"
+        
+        if offset != 0:
+            function_str += f" + {offset:.3f}"
+        
+        return function_str
+    
+    def generate_visualization(self, df):
+        """Generate visualization plots for the generated signal"""
+        # Constants for axis labels
+        X_LABEL = 'X (time)'
+        Y_LABEL = 'Y (signal)'
+        
+        plots = {}
+        x = df['x'].values
+        y = df['y'].values
+        params = self.last_generated_params
+        
+        # Plot 1: Generated Signal
+        plt.figure(figsize=(12, 6))
+        plt.plot(x, y, 'b-', linewidth=1.5, label='Generated Signal')
+        plt.title('Generated Sinusoidal Signal')
+        plt.xlabel(X_LABEL)
+        plt.ylabel(Y_LABEL)
+        plt.grid(True, alpha=0.3)
+        plt.legend()
+        plots['signal'] = self._plot_to_base64()
+        
+        # Plot 2: Individual Components
+        if len(params['sinusoids']) > 1:
+            plt.figure(figsize=(12, 8))
+            
+            # Plot each sinusoidal component
+            y_components = []
+            for i, (amplitude, frequency, phase) in enumerate(params['sinusoids']):
+                component = amplitude * np.sin(2 * np.pi * frequency * x + phase)
+                y_components.append(component)
+                plt.plot(x, component, '--', alpha=0.7, 
+                        label=f'Component {i+1}: A={amplitude:.2f}, f={frequency:.3f}')
+            
+            # Plot combined signal (without noise)
+            y_clean = np.sum(y_components, axis=0) + params['offset']
+            plt.plot(x, y_clean, 'k-', linewidth=2, label='Combined (no noise)')
+            
+            plt.title('Individual Sinusoidal Components')
+            plt.xlabel(X_LABEL)
+            plt.ylabel(Y_LABEL)
+            plt.grid(True, alpha=0.3)
+            plt.legend()
+            plots['components'] = self._plot_to_base64()
+        
+        # Plot 3: FFT Analysis of generated signal
+        N = len(x)
+        T = x[1] - x[0] if len(x) > 1 else 1
+        yf = fft(y)
+        xf = fftfreq(N, T)[:N//2]
+        amplitudes = 2.0 / N * np.abs(yf[:N//2])
+        
+        plt.figure(figsize=(10, 6))
+        plt.plot(xf, amplitudes, 'r-', linewidth=1.5)
+        plt.title('FFT Analysis of Generated Signal')
+        plt.xlabel('Frequency')
+        plt.ylabel('Amplitude')
+        plt.grid(True, alpha=0.3)
+        
+        # Mark the theoretical frequencies
+        for amplitude, frequency, phase in params['sinusoids']:
+            plt.axvline(x=frequency, color='green', linestyle='--', alpha=0.7,
+                       label=f'Theoretical f={frequency:.3f}')
+        
+        plt.legend()
+        plots['fft'] = self._plot_to_base64()
+        
+        return plots
+    
+    def _plot_to_base64(self):
+        """Convert current matplotlib plot to base64 string"""
+        buffer = io.BytesIO()
+        plt.savefig(buffer, format='png', dpi=150, bbox_inches='tight')
+        buffer.seek(0)
+        plot_data = buffer.getvalue()
+        buffer.close()
+        plt.close()
+        
+        encoded_plot = base64.b64encode(plot_data).decode()
+        return encoded_plot
 
 
 class SignalPredictor:
@@ -61,27 +245,58 @@ class SignalPredictor:
             # Perform FFT on training data
             N = len(x_train)
             T = x_train[1] - x_train[0] if len(x_train) > 1 else 1
-            
-            yf = fft(y_train)
-            xf = fftfreq(N, T)[:N//2]
-            
+
+            # Detrend to remove DC offset
+            y_detrended = y_train - np.mean(y_train)
+
+            # Compute one-sided FFT including Nyquist
+            yf = fft(y_detrended)
+            xf = np.fft.rfftfreq(N, T)
+            amplitudes = 2.0 / N * np.abs(yf[:N//2+1])
+
+            # Remove DC spike so it doesn't count as a sinusoid
+            amplitudes[0] = 0
+
             # Find dominant frequencies
-            amplitudes = 2.0 / N * np.abs(yf[:N//2])
             peaks, _ = find_peaks(amplitudes, height=0.05)
-            
+            # Fallback: if fewer than 2 peaks found, pick top-2 amplitude bins
+            if len(peaks) < 2 and len(amplitudes) >= 2:
+                sorted_idx = np.argsort(amplitudes)
+                peaks = sorted_idx[-2:]
+            # Assign detected frequencies and amplitudes
             self.dominant_freqs = xf[peaks]
             self.dominant_amplitudes = amplitudes[peaks]
-            
+
             if len(self.dominant_freqs) == 0:
                 raise ValueError("No dominant frequencies found")
             
             # Set initial guesses for curve fitting
+            # Estimate initial amplitudes, frequencies, and phases from FFT
+            # FFT was computed on detrended data, so get phase from original y_train FFT
+            fft_full = fft(y_train - np.mean(y_train))
+            fft_angles = np.angle(fft_full[:N//2+1])
             initial_guess = []
-            for amp, freq in zip(self.dominant_amplitudes, self.dominant_freqs):
-                initial_guess.extend([amp, freq, 0])  # Amplitude, frequency, phase
-            initial_guess.append(0)  # Offset
-            
-            # Fit the multi-sinusoidal model
+            for amp, freq, peak in zip(self.dominant_amplitudes, self.dominant_freqs, peaks):
+                phase_guess = fft_angles[peak]
+                initial_guess.extend([amp, freq, phase_guess])
+            # Use mean of training data as initial offset
+            initial_guess.append(np.mean(y_train))
+
+            # Global optimization with differential evolution to escape local minima
+            def _sse_obj(params):
+                return np.sum((y_train - self.multi_sinusoidal(x_train, *params))**2)
+
+            # Build bounds for (A, f, phi) per sinusoid and offset
+            bounds = []
+            max_amp = np.max(np.abs(y_train)) * 2
+            for _ in range(len(self.dominant_freqs)):
+                bounds += [(0, max_amp), (0, np.max(xf)), (-np.pi, np.pi)]
+            bounds.append((np.min(y_train), np.max(y_train)))
+
+            de_result = differential_evolution(_sse_obj, bounds, maxiter=1000, polish=False)
+            initial_guess = de_result.x.tolist()  # Override with global optimizer output
+
+            # Fit the multi-sinusoidal model using polished initial guess
             self.params, _ = curve_fit(self.multi_sinusoidal, x_train, y_train, p0=initial_guess)
             
             # Test the model if test data exists
@@ -176,7 +391,7 @@ class SignalPredictor:
         for i in range(0, len(self.params)-1, 3):
             A = self.params[i]
             f = self.params[i+1]
-            phi = self.params[i+2]
+            phi = self.params[i+2] % (2 * np.pi)  # normalize to [0, 2π]
             fitted_function += f"{A:.3f} * sin(2 * π * {f:.3f} * x + {phi:.3f}) + "
         
         D = self.params[-1]
@@ -187,10 +402,11 @@ class SignalPredictor:
         """Format parameters for display"""
         formatted_params = []
         for i in range(0, len(self.params)-1, 3):
+            phi = self.params[i+2] % (2 * np.pi)
             formatted_params.append({
                 'amplitude': round(self.params[i], 3),
                 'frequency': round(self.params[i+1], 3),
-                'phase': round(self.params[i+2], 3)
+                'phase': round(phi, 3)
             })
         
         return {

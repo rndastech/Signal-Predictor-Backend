@@ -6,38 +6,105 @@
 <div class="row">
     <div class="col-lg-8 mx-auto">
         <div class="card">
-            <div class="card-body text-center">
-                <h1 class="card-title mb-4">
+            <div class="card-body text-center">                <h1 class="card-title mb-4">
                     <i class="fas fa-wave-square text-primary"></i>
                     Signal Predictor
-                </h1>
-                <p class="card-text lead mb-4">
+                </h1>                {% if user.is_authenticated %}
+                    <p class="text-success mb-2">
+                        <i class="fas fa-user"></i> Welcome back, {{ user.username }}!
+                    </p>
+                    {% if has_temp_analysis %}
+                        <div class="alert alert-info alert-dismissible fade show" role="alert">
+                            <i class="fas fa-save"></i> 
+                            <strong>You have an unsaved analysis!</strong> 
+                            <a href="{% url 'save_session_analysis' %}" class="btn btn-sm btn-outline-primary ms-2">
+                                <i class="fas fa-save"></i> Save Now
+                            </a>
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    {% endif %}
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <div class="card border-success">
+                                <div class="card-body text-center">
+                                    <h5 class="card-title text-success">
+                                        <i class="fas fa-chart-line"></i> {{ total_analyses }}
+                                    </h5>
+                                    <p class="card-text small mb-0">Total Analyses</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="card border-info">
+                                <div class="card-body text-center">
+                                    <h5 class="card-title text-info">
+                                        <i class="fas fa-clock"></i> {{ recent_analyses|length }}
+                                    </h5>
+                                    <p class="card-text small mb-0">Recent Analyses</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                {% else %}
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle"></i> 
+                        <strong>Sign up or login</strong> to save your signal analyses and access them later!
+                    </div>
+                {% endif %}                <p class="card-text lead mb-4">
                     Analyze time-series signals using Fourier Transform and multi-sinusoidal curve fitting.
-                    Upload your CSV data and get detailed signal analysis with predictive modeling.
+                    Upload your CSV data or generate synthetic signals for detailed analysis and predictive modeling.
                 </p>
-                
-                <div class="row mt-4">
-                    <div class="col-md-6 mb-3">
-                        <div class="card h-100">
-                            <div class="card-body">
+                  <div class="row mt-4">
+                    <div class="col-lg-4 mb-3">
+                        <div class="card h-100">                            <div class="card-body">
                                 <i class="fas fa-upload fa-3x text-primary mb-3"></i>
                                 <h5 class="card-title">Upload Signal Data</h5>
                                 <p class="card-text">Upload a CSV file with your signal data (x, y columns) and get instant analysis.</p>
                                 <a href="{% url 'upload_csv' %}" class="btn btn-primary">
                                     <i class="fas fa-upload"></i> Upload CSV
                                 </a>
+                                {% if not user.is_authenticated %}
+                                    <div class="mt-2">
+                                        <small class="text-muted">
+                                            <i class="fas fa-info-circle"></i> Login required to save results
+                                        </small>
+                                    </div>
+                                {% endif %}
                             </div>
                         </div>
                     </div>
-                    <div class="col-md-6 mb-3">
+                    <div class="col-lg-4 mb-3">
+                        <div class="card h-100">
+                            <div class="card-body">
+                                <i class="fas fa-magic fa-3x text-warning mb-3"></i>
+                                <h5 class="card-title">Generate Signals</h5>
+                                <p class="card-text">Create synthetic sinusoidal signals with custom or random parameters for testing.</p>
+                                <a href="{% url 'signal_generator' %}" class="btn btn-warning">
+                                    <i class="fas fa-magic"></i> Generate Signal
+                                </a>
+                                <div class="mt-2">
+                                    <small class="text-muted">
+                                        <i class="fas fa-info-circle"></i> Perfect for testing algorithms
+                                    </small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-4 mb-3">
                         <div class="card h-100">
                             <div class="card-body">
                                 <i class="fas fa-chart-line fa-3x text-success mb-3"></i>
                                 <h5 class="card-title">View Past Analyses</h5>
                                 <p class="card-text">Browse and review your previous signal analysis results and fitted functions.</p>
-                                <a href="{% url 'analysis_list' %}" class="btn btn-success">
-                                    <i class="fas fa-list"></i> View Analyses
-                                </a>
+                                {% if user.is_authenticated %}
+                                    <a href="{% url 'analysis_list' %}" class="btn btn-success">
+                                        <i class="fas fa-list"></i> My Analyses
+                                    </a>
+                                {% else %}
+                                    <a href="{% url 'signup' %}" class="btn btn-success">
+                                        <i class="fas fa-user-plus"></i> Sign Up to Save
+                                    </a>
+                                {% endif %}
                             </div>
                         </div>
                     </div>
@@ -47,7 +114,7 @@
     </div>
 </div>
 
-{% if recent_analyses %}
+{% if user.is_authenticated and recent_analyses %}
 <div class="row mt-4">
     <div class="col-lg-8 mx-auto">
         <div class="card">
@@ -82,22 +149,26 @@
         <div class="card">
             <div class="card-header">
                 <h5 class="mb-0"><i class="fas fa-info-circle"></i> How It Works</h5>
-            </div>
-            <div class="card-body">
+            </div>            <div class="card-body">
                 <div class="row">
-                    <div class="col-md-4 text-center mb-3">
-                        <i class="fas fa-file-csv fa-2x text-primary mb-2"></i>
-                        <h6>1. Upload Data</h6>
-                        <p class="small">Upload a CSV with 'x' and 'y' columns</p>
+                    <div class="col-md-3 text-center mb-3">
+                        <i class="fas fa-magic fa-2x text-warning mb-2"></i>
+                        <h6>1. Generate or Upload</h6>
+                        <p class="small">Create synthetic signals or upload CSV data</p>
                     </div>
-                    <div class="col-md-4 text-center mb-3">
-                        <i class="fas fa-cogs fa-2x text-warning mb-2"></i>
-                        <h6>2. FFT Analysis</h6>
+                    <div class="col-md-3 text-center mb-3">
+                        <i class="fas fa-file-csv fa-2x text-primary mb-2"></i>
+                        <h6>2. Process Data</h6>
+                        <p class="small">System reads 'x' and 'y' columns from data</p>
+                    </div>
+                    <div class="col-md-3 text-center mb-3">
+                        <i class="fas fa-cogs fa-2x text-info mb-2"></i>
+                        <h6>3. FFT Analysis</h6>
                         <p class="small">Fourier Transform finds dominant frequencies</p>
                     </div>
-                    <div class="col-md-4 text-center mb-3">
+                    <div class="col-md-3 text-center mb-3">
                         <i class="fas fa-chart-area fa-2x text-success mb-2"></i>
-                        <h6>3. Curve Fitting</h6>
+                        <h6>4. Curve Fitting</h6>
                         <p class="small">Multi-sinusoidal model reconstruction</p>
                     </div>
                 </div>

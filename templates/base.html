@@ -47,12 +47,21 @@
             border-radius: 4px;
             font-family: 'Courier New', monospace;
             font-size: 1.1em;
-        }
-        .parameter-box {
+        }        .parameter-box {
             background: #e3f2fd;
             border-radius: 8px;
             padding: 15px;
             margin: 10px 0;
+        }
+        .nav-link.btn.btn-link {
+            color: var(--bs-nav-link-color);
+            text-decoration: none;
+            border: none;
+            background: none;
+            padding: var(--bs-nav-link-padding-y) var(--bs-nav-link-padding-x);
+        }
+        .nav-link.btn.btn-link:hover {
+            color: var(--bs-nav-link-hover-color);
         }
     </style>
 </head>
@@ -64,8 +73,7 @@
             </a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                 <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navbarNav">
+            </button>            <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav ms-auto">
                     <li class="nav-item">
                         <a class="nav-link" href="{% url 'home' %}"><i class="fas fa-home"></i> Home</a>
@@ -74,8 +82,29 @@
                         <a class="nav-link" href="{% url 'upload_csv' %}"><i class="fas fa-upload"></i> Upload CSV</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="{% url 'analysis_list' %}"><i class="fas fa-list"></i> All Analyses</a>
+                        <a class="nav-link" href="{% url 'signal_generator' %}"><i class="fas fa-magic"></i> Generate Signal</a>
                     </li>
+                    {% if user.is_authenticated %}
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'analysis_list' %}"><i class="fas fa-list"></i> My Analyses</a>
+                        </li>                        <li class="nav-item dropdown">
+                            <button class="nav-link dropdown-toggle btn btn-link" id="navbarDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                                <i class="fas fa-user"></i> {{ user.username }}
+                            </button>
+                            <ul class="dropdown-menu">
+                                <li><a class="dropdown-item" href="{% url 'logout' %}">
+                                    <i class="fas fa-sign-out-alt"></i> Logout
+                                </a></li>
+                            </ul>
+                        </li>
+                    {% else %}
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'login' %}"><i class="fas fa-sign-in-alt"></i> Login</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'signup' %}"><i class="fas fa-user-plus"></i> Sign Up</a>
+                        </li>
+                    {% endif %}
                 </ul>
             </div>
         </div>
