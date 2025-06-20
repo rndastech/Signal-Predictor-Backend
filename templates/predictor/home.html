@@ -3,106 +3,125 @@
 {% block title %}Home - Signal Predictor{% endblock %}
 
 {% block content %}
+<!-- Hero Section -->
+<div class="row mb-5">
+    <div class="col-12 text-center">
+        <h1 class="hero-text mb-4">SIGNAL PREDICTOR</h1>
+        <p class="lead text-secondary" style="font-size: 1.3rem; font-weight: 300;">
+            Advanced AI-Powered Signal Analysis & Predictive Modeling
+        </p>
+        <div class="mt-4">
+            <a href="{% url 'upload_csv' %}" class="btn btn-primary btn-lg me-3">
+                <i class="fas fa-rocket"></i> START ANALYSIS
+            </a>
+            <a href="{% url 'signal_generator' %}" class="btn btn-warning btn-lg">
+                <i class="fas fa-magic"></i> GENERATE SIGNAL
+            </a>
+        </div>
+    </div>
+</div>
+
 <div class="row">
     <div class="col-lg-8 mx-auto">
-        <div class="card">
-            <div class="card-body text-center">                <h1 class="card-title mb-4">
-                    <i class="fas fa-wave-square text-primary"></i>
-                    Signal Predictor
-                </h1>                {% if user.is_authenticated %}
-                    <p class="text-success mb-2">
-                        <i class="fas fa-user"></i> Welcome back, {{ user.username }}!
-                    </p>
-                    {% if has_temp_analysis %}
-                        <div class="alert alert-info alert-dismissible fade show" role="alert">
-                            <i class="fas fa-save"></i> 
-                            <strong>You have an unsaved analysis!</strong> 
-                            <a href="{% url 'save_session_analysis' %}" class="btn btn-sm btn-outline-primary ms-2">
-                                <i class="fas fa-save"></i> Save Now
-                            </a>
-                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        <div class="card floating-card">
+            <div class="card-body text-center">                {% if user.is_authenticated %}
+                    <div class="d-flex align-items-center justify-content-center mb-4">
+                        {% if user.userprofile.profile_picture %}
+                            <img src="{{ user.userprofile.profile_picture.url }}" alt="{{ user.username }}" class="rounded-circle me-3 profile-pic" style="width: 60px; height: 60px;">
+                        {% else %}
+                            <div class="rounded-circle me-3 d-flex align-items-center justify-content-center profile-pic" style="width: 60px; height: 60px; background: var(--accent-yellow); color: var(--bg-primary); font-weight: bold;">
+                                {{ user.username|first|upper }}
+                            </div>
+                        {% endif %}
+                        <div class="text-start">
+                            <h5 class="text-warning mb-1">
+                                <i class="fas fa-user"></i> Welcome back, 
+                                {% if user.first_name %}{{ user.first_name }}{% else %}{{ user.username }}{% endif %}!
+                            </h5>
+                            <small><a href="{% url 'profile' %}" class="text-decoration-none text-secondary">Manage Profile <i class="fas fa-arrow-right"></i></a></small>
                         </div>
-                    {% endif %}
-                    <div class="row mb-3">
+                    </div>
+                    <div class="row mb-4">
                         <div class="col-md-6">
-                            <div class="card border-success">
+                            <div class="card floating-card border-0">
                                 <div class="card-body text-center">
-                                    <h5 class="card-title text-success">
+                                    <h3 class="text-warning">
                                         <i class="fas fa-chart-line"></i> {{ total_analyses }}
-                                    </h5>
-                                    <p class="card-text small mb-0">Total Analyses</p>
+                                    </h3>
+                                    <p class="card-text mb-0 text-warning">Total Analyses</p>
                                 </div>
                             </div>
                         </div>
                         <div class="col-md-6">
-                            <div class="card border-info">
+                            <div class="card floating-card border-0">
                                 <div class="card-body text-center">
-                                    <h5 class="card-title text-info">
+                                    <h3 class="text-warning">
                                         <i class="fas fa-clock"></i> {{ recent_analyses|length }}
-                                    </h5>
-                                    <p class="card-text small mb-0">Recent Analyses</p>
+                                    </h3>
+                                    <p class="card-text mb-0 text-warning">Recent Analyses</p>
                                 </div>
                             </div>
                         </div>
                     </div>
                 {% else %}
-                    <div class="alert alert-info">
-                        <i class="fas fa-info-circle"></i> 
-                        <strong>Sign up or login</strong> to save your signal analyses and access them later!
+                    <div class="alert alert-info mb-4">
+                        <i class="fas fa-rocket me-2"></i> 
+                        <strong>Join the Future of Signal Analysis</strong> - Sign up to save your analyses and unlock advanced features!
                     </div>
-                {% endif %}                <p class="card-text lead mb-4">
-                    Analyze time-series signals using Fourier Transform and multi-sinusoidal curve fitting.
-                    Upload your CSV data or generate synthetic signals for detailed analysis and predictive modeling.
+                {% endif %}                <p class="lead mb-4" style="font-size: 1.1rem; color: var(--text-secondary);">
+                    Harness the power of Fourier Transform and AI-driven multi-sinusoidal curve fitting.
+                    Upload your data or generate synthetic signals for comprehensive analysis and predictive modeling.
                 </p>
-                  <div class="row mt-4">
-                    <div class="col-lg-4 mb-3">
-                        <div class="card h-100">                            <div class="card-body">
-                                <i class="fas fa-upload fa-3x text-primary mb-3"></i>
-                                <h5 class="card-title">Upload Signal Data</h5>
-                                <p class="card-text">Upload a CSV file with your signal data (x, y columns) and get instant analysis.</p>
-                                <a href="{% url 'upload_csv' %}" class="btn btn-primary">
-                                    <i class="fas fa-upload"></i> Upload CSV
+                  <div class="row mt-5">
+                    <div class="col-lg-4 mb-4">
+                        <div class="card h-100 floating-card">
+                            <div class="card-body text-center">
+                                <i class="fas fa-upload fa-3x text-warning mb-3"></i>
+                                <h5 class="card-title text-warning">UPLOAD SIGNAL DATA</h5>
+                                <p class="card-text">Upload CSV files with your signal data (x, y columns) for instant AI-powered analysis.</p>
+                                <a href="{% url 'upload_csv' %}" class="btn btn-warning">
+                                    <i class="fas fa-upload"></i> UPLOAD CSV
                                 </a>
                                 {% if not user.is_authenticated %}
-                                    <div class="mt-2">
-                                        <small class="text-muted">
-                                            <i class="fas fa-info-circle"></i> Login required to save results
+                                    <div class="mt-3">
+                                        <small class="text-secondary">
+                                            <i class="fas fa-lock"></i> Login required to save results
                                         </small>
                                     </div>
                                 {% endif %}
                             </div>
                         </div>
                     </div>
-                    <div class="col-lg-4 mb-3">
-                        <div class="card h-100">
-                            <div class="card-body">
+                    <div class="col-lg-4 mb-4">
+                        <div class="card h-100 floating-card">
+                            <div class="card-body text-center">
                                 <i class="fas fa-magic fa-3x text-warning mb-3"></i>
-                                <h5 class="card-title">Generate Signals</h5>
-                                <p class="card-text">Create synthetic sinusoidal signals with custom or random parameters for testing.</p>
+                                <h5 class="card-title text-warning">GENERATE SIGNALS</h5>
+                                <p class="card-text">Create synthetic sinusoidal signals with custom or randomized parameters for testing.</p>
                                 <a href="{% url 'signal_generator' %}" class="btn btn-warning">
-                                    <i class="fas fa-magic"></i> Generate Signal
+                                    <i class="fas fa-magic"></i> GENERATE SIGNAL
                                 </a>
-                                <div class="mt-2">
-                                    <small class="text-muted">
-                                        <i class="fas fa-info-circle"></i> Perfect for testing algorithms
+                                <div class="mt-3">
+                                    <small class="text-secondary">
+                                        <i class="fas fa-flask"></i> Perfect for algorithm testing
                                     </small>
                                 </div>
                             </div>
                         </div>
                     </div>
-                    <div class="col-lg-4 mb-3">
-                        <div class="card h-100">
-                            <div class="card-body">
-                                <i class="fas fa-chart-line fa-3x text-success mb-3"></i>
-                                <h5 class="card-title">View Past Analyses</h5>
+                    <div class="col-lg-4 mb-4">
+                        <div class="card h-100 floating-card">
+                            <div class="card-body text-center">
+                                <i class="fas fa-chart-line fa-3x text-warning mb-3"></i>
+                                <h5 class="card-title text-warning">VIEW ANALYTICS</h5>
                                 <p class="card-text">Browse and review your previous signal analysis results and fitted functions.</p>
                                 {% if user.is_authenticated %}
-                                    <a href="{% url 'analysis_list' %}" class="btn btn-success">
-                                        <i class="fas fa-list"></i> My Analyses
+                                    <a href="{% url 'analysis_list' %}" class="btn btn-warning">
+                                        <i class="fas fa-chart-line"></i> MY ANALYTICS
                                     </a>
                                 {% else %}
-                                    <a href="{% url 'signup' %}" class="btn btn-success">
-                                        <i class="fas fa-user-plus"></i> Sign Up to Save
+                                    <a href="{% url 'signup' %}" class="btn btn-warning">
+                                        <i class="fas fa-user-plus"></i> SIGN UP NOW
                                     </a>
                                 {% endif %}
                             </div>
@@ -115,65 +134,107 @@
 </div>
 
 {% if user.is_authenticated and recent_analyses %}
-<div class="row mt-4">
+<div class="row mt-5">
     <div class="col-lg-8 mx-auto">
-        <div class="card">
+        <div class="card floating-card">
             <div class="card-header">
-                <h5 class="mb-0"><i class="fas fa-clock"></i> Recent Analyses</h5>
+                <h5 class="mb-0"><i class="fas fa-clock"></i> RECENT ANALYSES</h5>
             </div>
             <div class="card-body">
                 <div class="list-group list-group-flush">
-                    {% for analysis in recent_analyses %}
-                    <div class="list-group-item d-flex justify-content-between align-items-center">
+                    {% for analysis in recent_analyses %}                    <div class="list-group-item d-flex justify-content-between align-items-center interactive">
                         <div>
-                            <h6 class="mb-1">Analysis #{{ analysis.id }}</h6>
+                            <h6 class="mb-1">{{ analysis.display_name }}</h6>
                             <p class="mb-1 text-muted">{{ analysis.created_at|date:"M d, Y H:i" }}</p>
                             {% if analysis.mse %}
-                                <small class="text-success">MSE: {{ analysis.mse|floatformat:6 }}</small>
-                            {% endif %}
+                                <small class="text-success"><span class="status-indicator status-success"></span>MSE: {{ analysis.mse|floatformat:6 }}</small>
+                            {% endif %}                        </div>
+                        <div>
+                            <a href="{% url 'analysis_detail' analysis.id %}" class="btn btn-primary btn-sm me-2">
+                                <i class="fas fa-eye"></i> VIEW
+                            </a>
+                            <button class="btn btn-outline-danger btn-sm" data-bs-toggle="modal" data-bs-target="#deleteHomeModal{{ analysis.id }}">
+                                <i class="fas fa-trash"></i>
+                            </button>
                         </div>
-                        <a href="{% url 'analysis_detail' analysis.id %}" class="btn btn-outline-primary btn-sm">
-                            View Details
-                        </a>
                     </div>
-                    {% endfor %}
-                </div>
+                    {% endfor %}                </div>
             </div>
         </div>
     </div>
 </div>
+
+<!-- Delete Confirmation Modals for Recent Analyses -->
+{% for analysis in recent_analyses %}
+<div class="modal fade" id="deleteHomeModal{{ analysis.id }}" tabindex="-1" aria-labelledby="deleteHomeModalLabel{{ analysis.id }}" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deleteHomeModalLabel{{ analysis.id }}">
+                    <i class="fas fa-exclamation-triangle text-warning"></i> CONFIRM DELETION
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to delete the analysis <strong>"{{ analysis.display_name }}"</strong>?</p>
+                <p class="text-muted small">
+                    <i class="fas fa-warning"></i> 
+                    This action cannot be undone. The analysis and all its data will be permanently removed.
+                </p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <form method="post" action="{% url 'delete_analysis' analysis.id %}" style="display: inline;">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger">
+                        <i class="fas fa-trash"></i> DELETE ANALYSIS
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endfor %}
 {% endif %}
 
-<div class="row mt-4">
+<div class="row mt-5">
     <div class="col-lg-8 mx-auto">
-        <div class="card">
+        <div class="card floating-card">
             <div class="card-header">
-                <h5 class="mb-0"><i class="fas fa-info-circle"></i> How It Works</h5>
+                <h5 class="mb-0"><i class="fas fa-cogs"></i> HOW IT WORKS</h5>
             </div>            <div class="card-body">
                 <div class="row">
-                    <div class="col-md-3 text-center mb-3">
-                        <i class="fas fa-magic fa-2x text-warning mb-2"></i>
-                        <h6>1. Generate or Upload</h6>
-                        <p class="small">Create synthetic signals or upload CSV data</p>
+                    <div class="col-md-3 text-center mb-4">
+                        <div class="floating-card h-100" style="padding: 20px; background: rgba(255, 102, 0, 0.1);">
+                            <i class="fas fa-magic fa-3x text-warning mb-3"></i>
+                            <h6>1. GENERATE/UPLOAD</h6>
+                            <p class="small">Create synthetic signals or upload CSV data</p>
+                        </div>
                     </div>
-                    <div class="col-md-3 text-center mb-3">
-                        <i class="fas fa-file-csv fa-2x text-primary mb-2"></i>
-                        <h6>2. Process Data</h6>
-                        <p class="small">System reads 'x' and 'y' columns from data</p>
+                    <div class="col-md-3 text-center mb-4">
+                        <div class="floating-card h-100" style="padding: 20px; background: rgba(0, 255, 255, 0.1);">
+                            <i class="fas fa-file-csv fa-3x text-primary mb-3"></i>
+                            <h6>2. DATA PROCESSING</h6>
+                            <p class="small">System reads 'x' and 'y' columns from data</p>
+                        </div>
                     </div>
-                    <div class="col-md-3 text-center mb-3">
-                        <i class="fas fa-cogs fa-2x text-info mb-2"></i>
-                        <h6>3. FFT Analysis</h6>
-                        <p class="small">Fourier Transform finds dominant frequencies</p>
+                    <div class="col-md-3 text-center mb-4">
+                        <div class="floating-card h-100" style="padding: 20px; background: rgba(138, 43, 226, 0.1);">
+                            <i class="fas fa-wave-square fa-3x text-info mb-3"></i>
+                            <h6>3. FFT ANALYSIS</h6>
+                            <p class="small">Fourier Transform finds dominant frequencies</p>
+                        </div>
                     </div>
-                    <div class="col-md-3 text-center mb-3">
-                        <i class="fas fa-chart-area fa-2x text-success mb-2"></i>
-                        <h6>4. Curve Fitting</h6>
-                        <p class="small">Multi-sinusoidal model reconstruction</p>
+                    <div class="col-md-3 text-center mb-4">
+                        <div class="floating-card h-100" style="padding: 20px; background: rgba(57, 255, 20, 0.1);">
+                            <i class="fas fa-chart-area fa-3x text-success mb-3"></i>
+                            <h6>4. AI CURVE FITTING</h6>
+                            <p class="small">Multi-sinusoidal model reconstruction</p>
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
-    </div>
+        </div>    </div>
 </div>
+
 {% endblock %}

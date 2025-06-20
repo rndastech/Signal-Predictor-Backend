@@ -1,4 +1,55 @@
 from django import forms
+from django.contrib.auth.models import User
+from .models import UserProfile
+
+
+class UserProfileForm(forms.ModelForm):
+    class Meta:
+        model = UserProfile
+        fields = ['profile_picture', 'bio', 'location', 'birth_date', 'website']
+        widgets = {
+            'profile_picture': forms.FileInput(attrs={
+                'class': 'form-control',
+                'accept': 'image/*'
+            }),
+            'bio': forms.Textarea(attrs={
+                'class': 'form-control',
+                'rows': 4,
+                'placeholder': 'Tell us about yourself...'
+            }),
+            'location': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'City, Country'
+            }),
+            'birth_date': forms.DateInput(attrs={
+                'class': 'form-control',
+                'type': 'date'
+            }),
+            'website': forms.URLInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'https://yourwebsite.com'
+            }),
+        }
+
+
+class UserForm(forms.ModelForm):
+    class Meta:
+        model = User
+        fields = ['first_name', 'last_name', 'email']
+        widgets = {
+            'first_name': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'First Name'
+            }),
+            'last_name': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Last Name'
+            }),
+            'email': forms.EmailInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'your.email@example.com'
+            }),
+        }
 
 
 class CSVUploadForm(forms.Form):
@@ -18,6 +69,28 @@ class CSVUploadForm(forms.Form):
         widget=forms.NumberInput(attrs={
             'class': 'form-control',
             'step': '0.1'
+        })
+    )
+    
+    # Advanced mode toggle and related settings
+    advanced_mode = forms.BooleanField(
+        label='Advanced Mode',
+        required=False,
+        initial=False,
+        widget=forms.CheckboxInput(attrs={
+            'class': 'form-check-input'
+        })
+    )
+    
+    noise_filter = forms.FloatField(
+        label='Noise Filter Level',
+        required=False,
+        initial=0.0,
+        help_text='Ignore amplitudes below this level',
+        widget=forms.NumberInput(attrs={
+            'class': 'form-control',
+            'step': '0.01',
+            'min': '0'
         })
     )
     
@@ -226,3 +299,54 @@ class SignalGeneratorForm(forms.Form):
             raise forms.ValidationError('X End must be greater than X Start')
         
         return cleaned_data
+
+
+class AnalysisRenameForm(forms.Form):
+    name = forms.CharField(
+        max_length=100,
+        required=False,
+        label='Analysis Name',
+        help_text='Give your analysis a custom name (leave blank for default)',
+        widget=forms.TextInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'Enter a name for this analysis...'
+        })
+    )
+    
+    def clean_name(self):
+        name = self.cleaned_data.get('name')
+        if name:
+            name = name.strip()
+            if len(name) < 2:
+                raise forms.ValidationError('Name must be at least 2 characters long')
+        return name
+
+
+class AnalysisShareForm(forms.Form):
+    is_public = forms.BooleanField(
+        label='Make Analysis Public',
+        required=False,
+        widget=forms.CheckboxInput(attrs={'class': 'form-check-input'})
+    )
+    share_password = forms.CharField(
+        label='Password (optional)',
+        required=False,
+        widget=forms.PasswordInput(attrs={'class': 'form-control'}),
+        help_text='Set a password to restrict access to the shared link.'
+    )
+
+    def clean(self):
+        cleaned = super().clean()
+        is_public = cleaned.get('is_public')
+        pwd = cleaned.get('share_password')
+        if pwd and not is_public:
+            raise forms.ValidationError('To use a share password, the analysis must be made public.')
+        return cleaned
+
+
+class SharePasswordForm(forms.Form):
+    password = forms.CharField(
+        label='Password',
+        widget=forms.PasswordInput(attrs={'class': 'form-control'}),
+        help_text='Enter password to access this analysis.'
+    )

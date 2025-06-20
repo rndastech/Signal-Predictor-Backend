@@ -1,12 +1,14 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
-from django.http import JsonResponse, HttpResponse
+from django.http import JsonResponse, HttpResponse, Http404  # include Http404 for share view
 from django.contrib.auth.models import User
 import pandas as pd
 import io
-from .forms import CSVUploadForm, FunctionEvaluationForm, SignalGeneratorForm
-from .models import SignalAnalysis
+from django.urls import reverse  # for building share URLs
+from .forms import (CSVUploadForm, FunctionEvaluationForm, SignalGeneratorForm, AnalysisRenameForm,
+    UserProfileForm, UserForm, AnalysisShareForm, SharePasswordForm)
+from .models import SignalAnalysis, UserProfile
 from .signal_utils import SignalPredictor, SignalGenerator
 
 
@@ -28,9 +30,8 @@ def home(request):
         recent_analyses = SignalAnalysis.objects.filter(user=request.user)[:5]
         total_analyses = SignalAnalysis.objects.filter(user=request.user).count()
         
-        # Check for temporary analysis that can be saved
-        temp_analysis = request.session.get('temp_analysis')
-        has_temp_analysis = bool(temp_analysis)
+        # No longer check for temporary analysis since new analyses are auto-saved
+        has_temp_analysis = False
     else:
         recent_analyses = []
         total_analyses = 0
@@ -51,19 +52,28 @@ def upload_csv(request):
             try:
                 # Read the uploaded CSV file
                 csv_file = request.FILES['csv_file']
-                csv_data = pd.read_csv(io.StringIO(csv_file.read().decode('utf-8')))
-                  # Validate CSV structure
+                csv_data = pd.read_csv(io.StringIO(csv_file.read().decode('utf-8')))                # Validate CSV structure
                 if 'x' not in csv_data.columns or 'y' not in csv_data.columns:
                     messages.error(request, 'CSV file must contain "x" and "y" columns.')
                     return render(request, 'predictor/upload.html', {'form': form})
                 
+                # Apply advanced mode options
+                advanced = form.cleaned_data.get('advanced_mode')
+                noise_lvl = form.cleaned_data.get('noise_filter') or 0
+                if noise_lvl > 0:
+                    # Filter out low amplitude noise
+                    csv_data = csv_data[csv_data['y'].abs() >= noise_lvl]
+                if not advanced:
+                    # Auto determine split at 80% of data
+                    idx = int(0.8 * len(csv_data))
+                    split_point = csv_data['x'].iloc[idx if idx < len(csv_data) else -1]
+                else:
+                    split_point = form.cleaned_data.get('split_point')
                 # Perform signal analysis
                 predictor = SignalPredictor()
-                split_point = form.cleaned_data['split_point']
                 result = predictor.analyze_signal(csv_data, split_point)
                 
-                if result['success']:
-                    # Save to database only if user is logged in
+                if result['success']:                    # Auto-save to database for logged-in users
                     analysis = None
                     if request.user.is_authenticated:
                         analysis = SignalAnalysis.objects.create(
@@ -72,9 +82,15 @@ def upload_csv(request):
                             parameters=result['parameters'],
                             mse=result['mse'],
                             dominant_frequencies=result['dominant_frequencies']
-                        )                        # Store predictor in session for function evaluation
+                        )
+                        # Store predictor in session for function evaluation
                         request.session['predictor_params'] = predictor.params.tolist()
                         request.session['analysis_id'] = analysis.id
+                        
+                        # Clear any temporary analysis data since we auto-saved
+                        if 'temp_analysis' in request.session:
+                            del request.session['temp_analysis']
+                    
                     else:
                         # For anonymous users, store complete analysis data in session
                         request.session['predictor_params'] = predictor.params.tolist()
@@ -87,11 +103,14 @@ def upload_csv(request):
                         }
                     
                     # Redirect to results page
+                    # Prepare rename form for authenticated users
+                    rename_form = AnalysisRenameForm(initial={'name': analysis.name}) if analysis else None
                     return render(request, 'predictor/results.html', {
                         'result': result,
                         'analysis': analysis,
                         'csv_data': csv_data.to_dict('records')[:10],  # First 10 rows for preview
-                        'eval_form': FunctionEvaluationForm()
+                        'eval_form': FunctionEvaluationForm(),
+                        'rename_form': rename_form,
                     })
                 else:
                     messages.error(request, f'Analysis failed: {result["error"]}')
@@ -139,9 +158,11 @@ def analysis_detail(request, analysis_id):
     """View details of a specific analysis"""
     try:
         analysis = SignalAnalysis.objects.get(id=analysis_id, user=request.user)
+        rename_form = AnalysisRenameForm(initial={'name': analysis.name})
         return render(request, 'predictor/analysis_detail.html', {
             'analysis': analysis,
-            'eval_form': FunctionEvaluationForm()
+            'eval_form': FunctionEvaluationForm(),
+            'rename_form': rename_form
         })
     except SignalAnalysis.DoesNotExist:
         messages.error(request, 'Analysis not found.')
@@ -165,28 +186,65 @@ def save_session_analysis(request):
         messages.error(request, 'No temporary analysis found to save.')
         return redirect('home')
     
-    try:
-        # Create the analysis from session data
-        analysis = SignalAnalysis.objects.create(
-            user=request.user,
-            fitted_function=temp_analysis['fitted_function'],
-            parameters=temp_analysis['parameters'],
-            mse=temp_analysis['mse'],
-            dominant_frequencies=temp_analysis['dominant_frequencies']
-        )
-        
-        # Update session with the saved analysis ID
-        request.session['analysis_id'] = analysis.id
-        # Remove temporary data
-        if 'temp_analysis' in request.session:
-            del request.session['temp_analysis']
-        
-        messages.success(request, f'Analysis #{analysis.id} saved successfully!')
-        return redirect('analysis_detail', analysis_id=analysis.id)
-        
-    except Exception as e:
-        messages.error(request, f'Error saving analysis: {str(e)}')
-        return redirect('home')
+    if request.method == 'POST':
+        # Handle saving with optional name
+        form = AnalysisRenameForm(request.POST)
+        if form.is_valid():
+            try:
+                analysis_name = form.cleaned_data.get('name') or ""
+                
+                # Create the analysis from session data
+                analysis = SignalAnalysis.objects.create(
+                    user=request.user,
+                    name=analysis_name,
+                    fitted_function=temp_analysis['fitted_function'],
+                    parameters=temp_analysis['parameters'],
+                    mse=temp_analysis['mse'],
+                    dominant_frequencies=temp_analysis['dominant_frequencies']
+                )
+                
+                # Update session with the saved analysis ID
+                request.session['analysis_id'] = analysis.id
+                # Remove temporary data
+                if 'temp_analysis' in request.session:
+                    del request.session['temp_analysis']
+                
+                if analysis_name:
+                    messages.success(request, f'Analysis "{analysis_name}" saved successfully!')
+                else:
+                    messages.success(request, f'Analysis #{analysis.id} saved successfully!')
+                return redirect('analysis_detail', analysis_id=analysis.id)
+                
+            except Exception as e:
+                messages.error(request, f'Error saving analysis: {str(e)}')
+                return redirect('home')
+        else:
+            # Form has errors, show them
+            messages.error(request, 'Please correct the errors and try again.')
+    else:
+        # For backward compatibility, if it's a GET request, save without prompting for name
+        try:
+            # Create the analysis from session data
+            analysis = SignalAnalysis.objects.create(
+                user=request.user,
+                fitted_function=temp_analysis['fitted_function'],
+                parameters=temp_analysis['parameters'],
+                mse=temp_analysis['mse'],
+                dominant_frequencies=temp_analysis['dominant_frequencies']
+            )
+            
+            # Update session with the saved analysis ID
+            request.session['analysis_id'] = analysis.id
+            # Remove temporary data
+            if 'temp_analysis' in request.session:
+                del request.session['temp_analysis']
+            
+            messages.success(request, f'Analysis #{analysis.id} saved successfully!')
+            return redirect('analysis_detail', analysis_id=analysis.id)
+            
+        except Exception as e:
+            messages.error(request, f'Error saving analysis: {str(e)}')
+            return redirect('home')
 
 
 def clear_session(request):
@@ -308,3 +366,191 @@ def download_generated_csv(request):
     except Exception as e:
         messages.error(request, f'Error creating CSV: {str(e)}')
         return redirect('signal_generator')
+
+
+@login_required
+def rename_analysis(request, analysis_id):
+    """Rename a specific analysis"""
+    try:
+        analysis = SignalAnalysis.objects.get(id=analysis_id, user=request.user)
+        
+        if request.method == 'POST':
+            form = AnalysisRenameForm(request.POST)
+            if form.is_valid():
+                new_name = form.cleaned_data['name']
+                analysis.name = new_name if new_name else ""
+                analysis.save()
+                
+                if new_name:
+                    messages.success(request, f'Analysis renamed to "{new_name}"')
+                else:
+                    messages.success(request, f'Analysis name reset to default "Analysis #{analysis.id}"')
+                
+                return redirect('analysis_detail', analysis_id=analysis.id)
+            else:
+                messages.error(request, 'Please correct the errors below.')
+        else:
+            form = AnalysisRenameForm(initial={'name': analysis.name})
+            
+        return render(request, 'predictor/analysis_detail.html', {
+            'analysis': analysis,
+            'eval_form': FunctionEvaluationForm(),
+            'rename_form': form
+        })
+        
+    except SignalAnalysis.DoesNotExist:
+        messages.error(request, 'Analysis not found.')
+        return redirect('home')
+
+
+@login_required
+def delete_analysis(request, analysis_id):
+    """Delete a specific analysis"""
+    try:
+        analysis = SignalAnalysis.objects.get(id=analysis_id, user=request.user)
+        
+        if request.method == 'POST':
+            analysis_name = analysis.display_name
+            analysis.delete()
+            messages.success(request, f'Analysis "{analysis_name}" has been deleted successfully.')
+            return redirect('analysis_list')
+        else:
+            # Redirect to analysis list if not POST request
+            messages.warning(request, 'Invalid request method.')
+            return redirect('analysis_list')
+        
+    except SignalAnalysis.DoesNotExist:
+        messages.error(request, 'Analysis not found.')
+        return redirect('analysis_list')
+
+
+@login_required
+def bulk_delete_analyses(request):
+    """Delete multiple analyses at once"""
+    if request.method == 'POST':
+        analysis_ids = request.POST.getlist('analysis_ids')
+        if analysis_ids:
+            try:
+                # Get the analyses to delete (ensuring they belong to the current user)
+                analyses_to_delete = SignalAnalysis.objects.filter(
+                    id__in=analysis_ids, 
+                    user=request.user
+                )
+                count = analyses_to_delete.count()
+                analyses_to_delete.delete()
+                
+                if count == 1:
+                    messages.success(request, '1 analysis has been deleted successfully.')
+                else:
+                    messages.success(request, f'{count} analyses have been deleted successfully.')
+                    
+            except Exception as e:
+                messages.error(request, f'Error deleting analyses: {str(e)}')
+        else:
+            messages.warning(request, 'No analyses were selected for deletion.')
+    
+    return redirect('analysis_list')
+
+
+@login_required
+def profile_view(request):
+    """Display user profile"""
+    profile, _ = UserProfile.objects.get_or_create(user=request.user)
+    
+    context = {
+        'profile': profile,
+        'total_analyses': SignalAnalysis.objects.filter(user=request.user).count(),
+        'recent_analyses': SignalAnalysis.objects.filter(user=request.user)[:5],
+    }
+    
+    return render(request, 'predictor/profile.html', context)
+
+
+@login_required
+def edit_profile(request):
+    """Edit user profile"""
+    profile, _ = UserProfile.objects.get_or_create(user=request.user)
+    
+    if request.method == 'POST':
+        user_form = UserForm(request.POST, instance=request.user)
+        profile_form = UserProfileForm(request.POST, request.FILES, instance=profile)
+        
+        if user_form.is_valid() and profile_form.is_valid():
+            user_form.save()
+            profile_form.save()
+            messages.success(request, 'Your profile has been updated successfully!')
+            return redirect('profile')
+    else:
+        user_form = UserForm(instance=request.user)
+        profile_form = UserProfileForm(instance=profile)
+    
+    context = {
+        'user_form': user_form,
+        'profile_form': profile_form,
+    }
+    
+    return render(request, 'predictor/edit_profile.html', context)
+
+
+@login_required
+def share_options(request, analysis_id):
+    """Allow owner to set public/private status and optional password"""
+    analysis = get_object_or_404(SignalAnalysis, id=analysis_id, user=request.user)
+    if request.method == 'POST':
+        form = AnalysisShareForm(request.POST)
+        if form.is_valid():
+            is_pub = form.cleaned_data['is_public']
+            pwd = form.cleaned_data['share_password']
+            analysis.is_public = is_pub
+            if is_pub and pwd:
+                analysis.set_share_password(pwd)
+            else:
+                analysis.share_password_hash = ''
+            analysis.save()
+            messages.success(request, 'Share settings updated.')
+            return redirect('share_options', analysis_id=analysis.id)
+    else:
+        initial = {'is_public': analysis.is_public}
+        form = AnalysisShareForm(initial=initial)
+    public_url = request.build_absolute_uri(
+        reverse('analysis_share', args=[analysis.id])
+    )
+    return render(request, 'predictor/share_options.html', {
+        'analysis': analysis,
+        'form': form,
+        'public_url': public_url,
+    })
+
+
+def analysis_share(request, analysis_id):
+    """Public view of a shared analysis, with optional password"""
+    analysis = get_object_or_404(SignalAnalysis, id=analysis_id)
+    if not analysis.is_public:
+        raise Http404
+    # Password protection
+    if analysis.share_password_hash:
+        if request.method == 'POST':
+            form = SharePasswordForm(request.POST)
+            if form.is_valid():
+                pwd = form.cleaned_data['password']
+                if analysis.check_share_password(pwd):
+                    # access granted
+                    return render(request, 'predictor/analysis_detail.html', {
+                        'analysis': analysis,
+                        'eval_form': FunctionEvaluationForm(),
+                        'shared': True
+                    })
+                else:
+                    form.add_error('password', 'Incorrect password.')
+        else:
+            form = SharePasswordForm()
+        return render(request, 'predictor/analysis_share_password.html', {
+            'analysis': analysis,
+            'form': form
+        })
+    # No password, render directly
+    return render(request, 'predictor/analysis_detail.html', {
+        'analysis': analysis,
+        'eval_form': FunctionEvaluationForm(),
+        'shared': True
+    })

@@ -5,22 +5,23 @@
 {% block content %}
 <div class="row">
     <div class="col-lg-8 mx-auto">
-        <div class="card">
-            <div class="card-header">
-                <h4 class="mb-0"><i class="fas fa-upload"></i> Upload Signal Data</h4>
+        <div class="card floating-card">
+            <div class="card-header text-center">
+                <h2 class="mb-0"><i class="fas fa-upload glow"></i> UPLOAD SIGNAL DATA</h2>
+                <p class="mb-0 mt-2 text-muted">Advanced AI-Powered Signal Analysis</p>
             </div>
             <div class="card-body">
                 <form method="post" enctype="multipart/form-data">
                     {% csrf_token %}
                     
-                    <div class="mb-3">
-                        <label for="{{ form.csv_file.id_for_label }}" class="form-label">
-                            {{ form.csv_file.label }}
+                    <div class="mb-4">
+                        <label for="{{ form.csv_file.id_for_label }}" class="form-label h6">
+                            <i class="fas fa-file-csv text-primary"></i> {{ form.csv_file.label }}
                         </label>
                         {{ form.csv_file }}
                         <div class="form-text">{{ form.csv_file.help_text }}</div>
                         {% if form.csv_file.errors %}
-                            <div class="text-danger">
+                            <div class="alert alert-danger mt-2">
                                 {% for error in form.csv_file.errors %}
                                     <small>{{ error }}</small>
                                 {% endfor %}
@@ -28,24 +29,36 @@
                         {% endif %}
                     </div>
                     
-                    <div class="mb-3">
-                        <label for="{{ form.split_point.id_for_label }}" class="form-label">
-                            {{ form.split_point.label }}
+                    <div class="form-check mb-4">
+                        {{ form.advanced_mode }}
+                        <label for="{{ form.advanced_mode.id_for_label }}" class="form-check-label h6">
+                            <i class="fas fa-cogs text-warning"></i> {{ form.advanced_mode.label }}
                         </label>
-                        {{ form.split_point }}
-                        <div class="form-text">{{ form.split_point.help_text }}</div>
-                        {% if form.split_point.errors %}
-                            <div class="text-danger">
-                                {% for error in form.split_point.errors %}
-                                    <small>{{ error }}</small>
-                                {% endfor %}
+                    </div>
+                    <div id="advanced-options" style="display: none;">
+                        <div class="card floating-card" style="background: rgba(255, 102, 0, 0.05);">
+                            <div class="card-body">
+                                <h6 class="card-title text-warning"><i class="fas fa-sliders-h"></i> ADVANCED SETTINGS</h6>
+                                <div class="mb-3">
+                                    <label for="{{ form.split_point.id_for_label }}" class="form-label">
+                                        {{ form.split_point.label }}
+                                    </label>
+                                    {{ form.split_point }}
+                                    <div class="form-text">{{ form.split_point.help_text }}</div>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="{{ form.noise_filter.id_for_label }}" class="form-label">
+                                        {{ form.noise_filter.label }}
+                                    </label>
+                                    {{ form.noise_filter }}
+                                    <div class="form-text">{{ form.noise_filter.help_text }}</div>                                </div>
                             </div>
-                        {% endif %}
+                        </div>
                     </div>
                     
-                    <div class="d-grid gap-2">
+                    <div class="d-grid gap-2 mt-4">
                         <button type="submit" class="btn btn-primary btn-lg">
-                            <i class="fas fa-chart-line"></i> Analyze Signal
+                            <i class="fas fa-rocket"></i> ANALYZE SIGNAL
                         </button>
                     </div>
                 </form>
@@ -54,20 +67,20 @@
     </div>
 </div>
 
-<div class="row mt-4">
+<div class="row mt-5">
     <div class="col-lg-8 mx-auto">
-        <div class="card">
+        <div class="card floating-card">
             <div class="card-header">
-                <h5 class="mb-0"><i class="fas fa-info-circle"></i> CSV Format Requirements</h5>
+                <h5 class="mb-0"><i class="fas fa-info-circle text-info"></i> CSV FORMAT REQUIREMENTS</h5>
             </div>
             <div class="card-body">
-                <p>Your CSV file should have the following structure:</p>
+                <p class="mb-4">Your CSV file should have the following structure:</p>
                 <div class="table-responsive">
-                    <table class="table table-sm">
+                    <table class="table">
                         <thead>
                             <tr>
-                                <th>x</th>
-                                <th>y</th>
+                                <th><i class="fas fa-arrow-right text-primary"></i> x</th>
+                                <th><i class="fas fa-arrow-up text-success"></i> y</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -90,14 +103,63 @@
                         </tbody>
                     </table>
                 </div>
-                <ul class="list-unstyled mt-3">
-                    <li><i class="fas fa-check text-success"></i> Must contain 'x' and 'y' columns</li>
-                    <li><i class="fas fa-check text-success"></i> Numeric data only</li>
-                    <li><i class="fas fa-check text-success"></i> CSV format (.csv extension)</li>
-                    <li><i class="fas fa-check text-success"></i> At least 3 data points recommended</li>
-                </ul>
+                <div class="row mt-4">
+                    <div class="col-md-6">
+                        <div class="floating-card h-100" style="padding: 15px; background: rgba(57, 255, 20, 0.1);">
+                            <h6 class="text-success"><i class="fas fa-check-circle"></i> REQUIREMENTS</h6>
+                            <ul class="list-unstyled">
+                                <li><span class="status-indicator status-success"></span>Must contain 'x' and 'y' columns</li>
+                                <li><span class="status-indicator status-success"></span>Numeric data only</li>
+                                <li><span class="status-indicator status-success"></span>CSV format (.csv extension)</li>
+                                <li><span class="status-indicator status-success"></span>At least 3 data points recommended</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="floating-card h-100" style="padding: 15px; background: rgba(0, 255, 255, 0.1);">
+                            <h6 class="text-info"><i class="fas fa-lightbulb"></i> TIPS</h6>
+                            <ul class="list-unstyled">
+                                <li><span class="status-indicator status-info"></span>More data points = better accuracy</li>
+                                <li><span class="status-indicator status-info"></span>Evenly spaced x-values preferred</li>
+                                <li><span class="status-indicator status-info"></span>Clean data yields better results</li>
+                                <li><span class="status-indicator status-info"></span>Use advanced options for optimization</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
 </div>
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const advToggle = document.getElementById('{{ form.advanced_mode.id_for_label }}');
+        const advOptions = document.getElementById('advanced-options');
+        
+        function toggleAdvanced() {
+            if (advToggle.checked) {
+                advOptions.style.display = 'block';
+                advOptions.style.animation = 'fadeIn 0.3s ease-in-out';
+            } else {
+                advOptions.style.display = 'none';
+            }
+        }
+          advToggle.addEventListener('change', toggleAdvanced);
+        // Initialize based on default
+        toggleAdvanced();
+        
+        // Add loading state to submit button
+        const form = document.querySelector('form');
+        const submitBtn = form.querySelector('button[type="submit"]');
+        
+        form.addEventListener('submit', function() {
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> ANALYZING...';
+            submitBtn.disabled = true;            submitBtn.classList.add('loading');
+        });
+    });
+</script>
+{% endblock %}
+
 {% endblock %}

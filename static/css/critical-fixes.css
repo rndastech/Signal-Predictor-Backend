@@ -1,0 +1,203 @@
+/* Critical Bug Fixes Applied */
+
+/* Ensure proper z-index layering */
+body {
+  position: relative;
+}
+
+.navbar {
+  z-index: 1050 !important;
+}
+
+.container {
+  position: relative;
+  z-index: 1 !important;
+}
+
+.card {
+  position: relative;
+  z-index: 1 !important;
+}
+
+/* Disable problematic overlays */
+.particles,
+.particle {
+  display: none !important;
+}
+
+/* Ensure content is always visible */
+.hero-text,
+.card-body,
+.navbar-brand,
+.nav-link {
+  position: relative;
+  z-index: 2 !important;
+}
+
+/* Fix profile picture sizing */
+.profile-pic {
+  max-width: 40px !important;
+  max-height: 40px !important;
+  width: 40px !important;
+  height: 40px !important;
+  object-fit: cover;
+  border-radius: 50%;
+}
+
+/* Prevent layout breaks */
+.card::before,
+.loading-overlay {
+  display: none !important;
+}
+
+/* Ensure buttons work properly */
+.btn {
+  position: relative;
+  z-index: 3 !important;
+  pointer-events: auto !important;
+}
+
+/* Fix form controls */
+.form-control {
+  position: relative;
+  z-index: 2 !important;
+}
+
+/* Ensure alerts are visible */
+.alert {
+  position: relative;
+  z-index: 4 !important;
+}
+
+/* Override any broken animations */
+@media (prefers-reduced-motion) {
+  *, *::before, *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+}
+
+/* Quick responsive fix */
+@media (max-width: 768px) {
+  .hero-text {
+    font-size: 2rem !important;
+  }
+  
+  .container {
+    padding-left: 15px !important;
+    padding-right: 15px !important;
+  }
+}
+
+/* Ensure text is readable */
+.text-primary { color: #00ffff !important; }
+.text-success { color: #39ff14 !important; }
+.text-warning { color: #ff6600 !important; }
+.text-info { color: #00ffff !important; }
+.text-danger { color: #ff1493 !important; }
+
+/* ---- Dark Theme Overrides ---- */
+html, body {
+  background: #000 !important;
+  background-image: none !important;
+  color: #e0e0e0 !important;
+}
+
+/* Remove neon/glow overlays */
+body::before {
+  display: none !important;
+}
+.fas, .far, .fab, i {
+  text-shadow: none !important;
+  filter: none !important;
+}
+
+/* Force card backgrounds */
+.card, .floating-card {
+  background: #1e1e1e !important;
+  border: 1px solid #333 !important;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.5) !important;
+}
+.card-header {
+  background: #111 !important;
+  border-bottom: 1px solid #555 !important;
+}
+
+/* Hero text solid color */
+.hero-text {
+  background: none !important;
+  -webkit-text-fill-color: var(--accent-yellow, #FFC107) !important;
+  text-shadow: none !important;
+}
+
+/* Plot images styling */
+.plot-container img {
+  border: 1px solid #333 !important;
+  box-shadow: none !important;
+  background: none !important;
+}
+
+/* Buttons and links */
+.btn, .btn-primary, .btn-warning, .btn-success, a {
+  box-shadow: none !important;
+  filter: none !important;
+  transition: background-color 0.2s ease !important;
+}
+.btn-primary {
+  background: var(--gradient-yellow) !important;
+  color: #000 !important;
+}
+.btn-primary:hover {
+  background: var(--accent-yellow) !important;
+}
+
+/* Remove card hover glow */
+.card:hover {
+  transform: none !important;
+  box-shadow: 0 6px 16px rgba(0,0,0,0.6) !important;
+}
+
+/* Navbar override */
+.navbar {
+  background: #111 !important;
+  border-bottom: 1px solid var(--accent-yellow) !important;
+  z-index: 1050 !important;
+}
+
+/* Ensure text colors */
+.text-primary, .text-success, .text-warning, .text-info, .text-danger {
+  color: var(--accent-yellow, #FFC107) !important;
+  text-shadow: none !important;
+}
+
+/* Form controls */
+.form-control {
+  background: #2a2a2a !important;
+  border: 1px solid #444 !important;
+  color: #e0e0e0 !important;
+}
+.form-control:focus {
+  border-color: var(--accent-yellow) !important;
+  box-shadow: 0 0 5px var(--accent-yellow) !important;
+}
+
+/* Force dark background for recent analyses list items */
+.list-group-flush .list-group-item {
+  background-color: var(--bg-primary) !important;
+  border: 1px solid #333 !important;
+  color: var(--text-primary) !important;
+  margin-bottom: 0.5rem !important;
+}
+
+/* Ensure global consistency */
+* {
+  background-blend-mode: normal !important;
+}
+
+/* Reduced motion fallback */
+@media (prefers-reduced-motion) {
+  *, *::before, *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+}
