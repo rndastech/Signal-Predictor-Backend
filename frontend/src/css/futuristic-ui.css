@@ -1,0 +1,201 @@
+/* Black & Yellow Theme */
+
+/* Import modern fonts */
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Exo+2:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
+/* CSS Variables for consistent theming */
+:root {
+  /* Dark theme colors */
+  --bg-primary: #000000;
+  --bg-secondary: #111111;
+  --bg-card: #1e1e1e;
+  --bg-glass: rgba(255, 255, 255, 0.05);
+  --text-primary: #e0e0e0;
+  --text-secondary: #aaaaaa;
+  
+  /* Solid Yellow Accent */
+  --accent-yellow: #FFC107;
+  --accent-yellow-light: #FFD54F;
+  --gradient-yellow: linear-gradient(135deg, #FFC107 0%, #FFD54F 100%);
+  
+  /* Shadows */
+  --shadow-card: 0 8px 24px rgba(0, 0, 0, 0.4);
+}
+
+/* Light mode variants */
+@media (prefers-color-scheme: light) {
+  :root {
+    --bg-primary: #f5f7fa;
+    --bg-secondary: #ffffff;
+    --bg-card: rgba(255, 255, 255, 0.9);
+    --bg-glass: rgba(255, 255, 255, 0.7);
+    --text-primary: #2d3748;
+    --text-secondary: #4a5568;
+    --text-muted: #a0aec0;
+    --shadow-card: 0 8px 32px rgba(0, 0, 0, 0.1);
+  }
+}
+
+/* ==== ENFORCE DARK + REMOVE NEON ==== */
+html, body {
+  background-color: #000 !important;
+  background-image: none !important;
+  font-family: 'Inter', sans-serif !important;
+}
+
+.container {
+  background: transparent !important;
+}
+
+.card, .floating-card {
+  background-color: #1e1e1e !important;
+  border: 1px solid #333 !important;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.5) !important;
+}
+
+.card-header {
+  background-color: #111 !important;
+  border-bottom: 1px solid #555 !important;
+}
+
+.hero-text {
+  background: transparent !important;
+  -webkit-text-fill-color: var(--accent-yellow, #FFC107) !important;
+  text-shadow: none !important;
+}
+
+.btn, .btn-primary, .btn-warning, .btn-success {
+  box-shadow: none !important;
+  filter: none !important;
+}
+
+.fas, .far, .fab, i {
+  filter: none !important;
+  text-shadow: none !important;
+}
+
+.text-primary, .text-success, .text-warning, .text-info, .text-danger {
+  color: var(--accent-yellow, #FFC107) !important;
+  text-shadow: none !important;
+}
+
+/* Remove any remaining neon glow on hover */
+.card:hover, .btn:hover {
+  box-shadow: 0 6px 16px rgba(0,0,0,0.6) !important;
+  transform: none !important;
+}
+
+/* End enforced dark theme */
+
+/* Base styles */
+* {
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Exo 2', sans-serif;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  min-height: 100vh;
+  overflow-x: hidden;
+  position: relative;
+}
+
+/* Animated background particles */
+body::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: 
+    radial-gradient(circle at 20% 20%, rgba(0, 255, 255, 0.05) 0%, transparent 50%),
+    radial-gradient(circle at 80% 80%, rgba(138, 43, 226, 0.05) 0%, transparent 50%),
+    radial-gradient(circle at 40% 60%, rgba(255, 20, 147, 0.03) 0%, transparent 50%);
+  z-index: -2;
+  animation: floatingBg 20s ease-in-out infinite;
+  pointer-events: none;
+}
+
+@keyframes floatingBg {
+  0%, 100% { transform: translateY(0px) rotate(0deg); }
+  50% { transform: translateY(-20px) rotate(1deg); }
+}
+
+/* Typography */
+h1, h2, h3, h4, h5, h6 {
+  font-family: 'Orbitron', monospace;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+}
+
+.hero-text {
+  font-family: 'Orbitron', monospace;
+  font-weight: 900;
+  font-size: 3.5rem;
+  background: var(--gradient-yellow);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  text-shadow: none;
+  animation: pulse 2s ease-in-out infinite alternate;
+  position: relative;
+  z-index: 2;
+}
+
+@keyframes pulse {
+  from { opacity: 0.8; }
+  to { opacity: 1; }
+}
+
+/* Navigation */
+.navbar {
+  background: var(--bg-secondary) !important;
+  border-bottom: 1px solid var(--accent-yellow);
+  transition: all 0.3s ease;
+  z-index: 1050;
+}
+
+.navbar-brand {
+  font-family: 'Orbitron', monospace;
+  font-weight: 700;
+  color: var(--accent-yellow) !important;
+  font-size: 1.5rem;
+  text-shadow: none;
+  transition: all 0.3s ease;
+}
+
+.navbar-brand:hover {
+  transform: scale(1.05);
+}
+
+.nav-link {
+  color: var(--text-secondary) !important;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.nav-link::before {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: -100%;
+  width: 100%;
+  height: 2px;
+  background: var(--accent-yellow);
+  transition: left 0.3s ease;
+}
+
+.nav-link:hover {
+  color: var(--accent-yellow) !important;
+  transform: translateY(-2px);
+  text-shadow: none;
+}
+
+.nav-link:hover::before {
+  left: 0;
+}

@@ -1,0 +1,10 @@
+.layout-wrapper {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: #000;
+}
+
+.main-content {
+  flex: 1;
+}

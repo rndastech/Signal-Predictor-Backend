@@ -1,0 +1,235 @@
+{% extends 'base.html' %}
+
+{% block title %}Generated Signal - Signal Predictor{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-10 mx-auto">
+        <!-- Header -->
+        <div class="card mb-4">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <div>
+                    <h2 class="mb-0">
+                        <i class="fas fa-chart-line text-success"></i>
+                        Generated Signal Results
+                    </h2>
+                    <p class="mb-0 text-muted">Synthetic sinusoidal signal with {{ result.parameters.sinusoids|length }} component(s)</p>
+                </div>
+                <div class="btn-group">
+                    <a href="{% url 'download_generated_csv' %}" class="btn btn-success">
+                        <i class="fas fa-download"></i> Download CSV
+                    </a>
+                    <a href="{% url 'signal_generator' %}" class="btn btn-outline-primary">
+                        <i class="fas fa-magic"></i> Generate New
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Generated Function -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-function"></i> Generated Function</h5>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-info">
+                    <h6 class="alert-heading">Mathematical Function:</h6>
+                    <code class="fs-6">{{ result.function_string }}</code>
+                </div>
+            </div>
+        </div>
+
+        <!-- Parameters Summary -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-sliders-h"></i> Signal Parameters</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <!-- Generation Parameters -->
+                    <div class="col-md-6">
+                        <h6 class="text-primary">Generation Parameters</h6>
+                        <table class="table table-sm">
+                            <tr>
+                                <td><strong>X Range:</strong></td>
+                                <td>{{ result.parameters.x_range.0 }} to {{ result.parameters.x_range.1 }}</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Data Points:</strong></td>
+                                <td>{{ result.parameters.num_points }}</td>
+                            </tr>
+                            <tr>
+                                <td><strong>DC Offset:</strong></td>
+                                <td>{{ result.parameters.offset }}</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Noise Level:</strong></td>
+                                <td>{{ result.parameters.noise_level }}</td>
+                            </tr>
+                        </table>
+                    </div>
+                    
+                    <!-- Sinusoidal Components -->
+                    <div class="col-md-6">
+                        <h6 class="text-success">Sinusoidal Components</h6>
+                        <div class="table-responsive">
+                            <table class="table table-sm">
+                                <thead>
+                                    <tr>
+                                        <th>#</th>
+                                        <th>Amplitude</th>
+                                        <th>Frequency</th>
+                                        <th>Phase</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for amplitude, frequency, phase in result.parameters.sinusoids %}
+                                    <tr>
+                                        <td>{{ forloop.counter }}</td>
+                                        <td>{{ amplitude|floatformat:3 }}</td>
+                                        <td>{{ frequency|floatformat:3 }}</td>
+                                        <td>{{ phase|floatformat:3 }}</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Visualization Plots -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-chart-area"></i> Signal Visualization</h5>
+            </div>
+            <div class="card-body">
+                <!-- Generated Signal Plot -->
+                <div class="mb-4">
+                    <h6 class="text-center mb-3">Generated Signal</h6>
+                    <div class="text-center">
+                        <img src="data:image/png;base64,{{ plots.signal }}" class="img-fluid" alt="Generated Signal">
+                    </div>
+                </div>
+
+                <!-- Components Plot (if multiple sinusoids) -->
+                {% if plots.components %}
+                <div class="mb-4">
+                    <h6 class="text-center mb-3">Individual Sinusoidal Components</h6>
+                    <div class="text-center">
+                        <img src="data:image/png;base64,{{ plots.components }}" class="img-fluid" alt="Signal Components">
+                    </div>
+                </div>
+                {% endif %}
+
+                <!-- FFT Plot -->
+                <div class="mb-4">
+                    <h6 class="text-center mb-3">Frequency Domain Analysis (FFT)</h6>
+                    <div class="text-center">
+                        <img src="data:image/png;base64,{{ plots.fft }}" class="img-fluid" alt="FFT Analysis">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Data Preview -->
+        <div class="card mb-4">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0"><i class="fas fa-table"></i> Data Preview</h5>
+                <small class="text-muted">First 10 rows of {{ result.parameters.num_points }} total points</small>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-striped table-hover">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>#</th>
+                                <th>X</th>
+                                <th>Y</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for row in csv_data %}
+                            <tr>
+                                <td>{{ forloop.counter }}</td>
+                                <td>{{ row.x|floatformat:4 }}</td>
+                                <td>{{ row.y|floatformat:6 }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Actions -->
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-tools"></i> Next Steps</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-4 text-center mb-3">
+                        <div class="card border-success h-100">
+                            <div class="card-body">
+                                <i class="fas fa-download fa-2x text-success mb-2"></i>
+                                <h6>Download CSV</h6>
+                                <p class="small text-muted">Save the generated signal data</p>
+                                <a href="{% url 'download_generated_csv' %}" class="btn btn-success btn-sm">
+                                    <i class="fas fa-download"></i> Download
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4 text-center mb-3">
+                        <div class="card border-warning h-100">
+                            <div class="card-body">
+                                <i class="fas fa-chart-line fa-2x text-warning mb-2"></i>
+                                <h6>Analyze Signal</h6>
+                                <p class="small text-muted">Test the predictor with this data</p>
+                                <a href="{% url 'upload_csv' %}" class="btn btn-warning btn-sm">
+                                    <i class="fas fa-upload"></i> Upload & Analyze
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4 text-center mb-3">
+                        <div class="card border-primary h-100">
+                            <div class="card-body">
+                                <i class="fas fa-magic fa-2x text-primary mb-2"></i>
+                                <h6>Generate New</h6>
+                                <p class="small text-muted">Create another signal</p>
+                                <a href="{% url 'signal_generator' %}" class="btn btn-primary btn-sm">
+                                    <i class="fas fa-magic"></i> New Signal
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.table-responsive {
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+.card-body img {
+    max-width: 100%;
+    height: auto;
+    border: 1px solid #dee2e6;
+    border-radius: 4px;
+}
+
+code {
+    background-color: #f8f9fa;
+    padding: 0.2rem 0.4rem;
+    border-radius: 0.25rem;
+    font-size: 0.95em;
+}
+</style>
+{% endblock %}

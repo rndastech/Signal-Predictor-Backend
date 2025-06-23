@@ -1,0 +1,50 @@
+{% extends 'base.html' %}
+
+{% block title %}Share {{ analysis.display_name }} - Signal Predictor{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center mt-4">
+  <div class="col-md-8">
+    <div class="card">
+      <div class="card-header">
+        <h5><i class="fas fa-share-alt"></i> Share Settings for {{ analysis.display_name }}</h5>
+      </div>
+      <div class="card-body">
+        <form method="post">
+          {% csrf_token %}
+          <div class="form-check mb-3">
+            {{ form.is_public }} {{ form.is_public.label_tag }}
+          </div>
+          <div class="mb-3">
+            {{ form.share_password.label_tag }}
+            {{ form.share_password }}
+            {% if form.share_password.help_text %}
+              <div class="form-text">{{ form.share_password.help_text }}</div>
+            {% endif %}
+            {% if form.share_password.errors %}
+              <div class="text-danger">
+                {% for err in form.share_password.errors %}
+                  <small>{{ err }}</small><br>
+                {% endfor %}
+              </div>
+            {% endif %}
+          </div>
+          <button type="submit" class="btn btn-primary">
+            <i class="fas fa-save"></i> Save Settings
+          </button>
+        </form>
+        {% if analysis.is_public %}
+        <div class="mt-4">
+          <label for="public_url" class="form-label">Public URL:</label>
+          <input id="public_url" type="text" class="form-control" readonly value="{{ public_url }}">
+          <small class="text-muted">Share this link to let others view your analysis.</small>
+        </div>
+        {% endif %}
+        <a href="{% url 'analysis_detail' analysis.id %}" class="btn btn-secondary mt-3">
+          <i class="fas fa-arrow-left"></i> Back to Analysis
+        </a>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
