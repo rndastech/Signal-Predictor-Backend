@@ -114,6 +114,41 @@ const AnalysisDetail = () => {
     }
   };
 
+  const handleDownloadCSV = () => {
+    if (analysis?.uploaded_file) {
+      // Use the backend's uploaded file URL
+      const link = document.createElement('a');
+      link.href = analysis.uploaded_file;
+      link.download = analysis.uploaded_file.split('/').pop() || 'analysis_data.csv';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+  };
+
+  // Helper function to format fitted function with proper spacing
+  const formatFittedFunction = (fittedFunction) => {
+    if (!fittedFunction) return 'Loading...';
+    
+    return fittedFunction
+      // Add spaces around operators
+      .replace(/\+/g, ' + ')
+      .replace(/\-/g, ' - ')
+      .replace(/\*/g, ' * ')
+      // Add spaces around parentheses for better readability
+      .replace(/\(/g, '(')
+      .replace(/\)/g, ')')
+      // Add space after π
+      .replace(/π/g, 'π * ')
+      // Clean up any double spaces
+      .replace(/\s+/g, ' ')
+      // Fix cases where we might have created "π * *" patterns
+      .replace(/π \* \*/g, 'π *')
+      // Fix negative signs that might have gotten extra spaces
+      .replace(/\+ \-/g, '- ')
+      .trim();
+  };
+
   if (loading) {
     return (
       <div
@@ -217,8 +252,7 @@ const AnalysisDetail = () => {
                         <i className="fas fa-check me-1"></i> SAVED
                       </span>
                     </div>
-                  </div>
-                  <div className="d-flex gap-2">
+                  </div>                  <div className="d-flex gap-2">
                     <button
                       className="btn px-4 py-2"
                       style={{
@@ -228,7 +262,8 @@ const AnalysisDetail = () => {
                         color: "#007bff",
                         fontWeight: "600",
                         transition: "all 0.3s ease",
-                      }}                      onClick={() => {
+                      }}
+                      onClick={() => {
                         setNewName(analysis?.name || analysis?.display_name || '')
                         setShowRenameModal(true)
                       }}
@@ -255,6 +290,33 @@ const AnalysisDetail = () => {
                     >
                       <i className="fas fa-edit me-2"></i> RENAME
                     </button>
+                    {analysis?.uploaded_file && (
+                      <a
+                        href={analysis.uploaded_file}
+                        download
+                        className="btn px-4 py-2 text-decoration-none"
+                        style={{
+                          background: "transparent",
+                          border: "2px solid #28a745",
+                          borderRadius: "25px",
+                          color: "#28a745",
+                          fontWeight: "600",
+                          transition: "all 0.3s ease",
+                        }}
+                        onMouseOver={(e) => {
+                          e.target.style.transform = "translateY(-2px)"
+                          e.target.style.boxShadow = "0 8px 25px rgba(40, 167, 69, 0.4)"
+                          e.target.style.textShadow = "0 0 10px rgba(40, 167, 69, 0.6)"
+                        }}
+                        onMouseOut={(e) => {
+                          e.target.style.transform = "translateY(0)"
+                          e.target.style.boxShadow = "none"
+                          e.target.style.textShadow = "none"
+                        }}
+                      >
+                        <i className="fas fa-download me-2"></i> DOWNLOAD CSV
+                      </a>
+                    )}
                     <button
                       className="btn px-4 py-2"
                       style={{
@@ -326,7 +388,7 @@ const AnalysisDetail = () => {
                   </div>
                 </div>
               </div>
-            </div>            {/* Fitted Function Card */}
+            </div>{/* Fitted Function Card */}
             <div
               className="card mb-4"
               style={{
@@ -368,9 +430,12 @@ const AnalysisDetail = () => {
                       color: "#ffc107",
                       textShadow: "0 0 10px rgba(255, 193, 7, 0.3)",
                       fontFamily: "'JetBrains Mono', 'Fira Code', monospace",
+                      wordBreak: "break-all",
+                      whiteSpace: "pre-wrap",
+                      lineHeight: "1.4",
                     }}
                   >
-                    {analysis?.fitted_function || 'Loading...'}
+                    {formatFittedFunction(analysis?.fitted_function)}
                   </code>
                 </div>
               </div>
@@ -738,7 +803,205 @@ const AnalysisDetail = () => {
                   </div>
                 )}
               </div>
-            </div>            {/* Navigation */}
+            </div>            {/* Visualizations */}
+            {(analysis?.has_visualizations || analysis?.original_signal_plot || analysis?.fitted_signal_plot || analysis?.frequency_analysis_plot) && (
+              <div
+                className="card mb-4"
+                style={{
+                  background: "rgba(255, 255, 255, 0.03)",
+                  backdropFilter: "blur(10px)",
+                  border: "1px solid rgba(255, 255, 255, 0.1)",
+                  borderRadius: "20px",
+                  boxShadow: "0 8px 32px rgba(0, 0, 0, 0.3)",
+                  transition: "all 0.3s ease",
+                  cursor: "pointer",
+                }}
+                onMouseOver={(e) => {
+                  e.currentTarget.style.transform = "translateY(-5px)"
+                  e.currentTarget.style.boxShadow = "0 15px 40px rgba(255, 193, 7, 0.4)"
+                  e.currentTarget.style.border = "1px solid rgba(255, 193, 7, 0.5)"
+                }}
+                onMouseOut={(e) => {
+                  e.currentTarget.style.transform = "translateY(0)"
+                  e.currentTarget.style.boxShadow = "0 8px 32px rgba(0, 0, 0, 0.3)"
+                  e.currentTarget.style.border = "1px solid rgba(255, 255, 255, 0.1)"
+                }}
+              >
+                <div className="card-body p-4">
+                  <h4 className="text-light mb-4 d-flex align-items-center gap-3">
+                    <i className="fas fa-chart-area" style={{ color: "#6f42c1" }}></i>
+                    VISUALIZATIONS
+                  </h4>                  <div className="row g-4">
+                    {analysis?.frequency_analysis_plot && (
+                      <div className="col-lg-6">
+                        <div
+                          className="p-3 rounded-3"
+                          style={{
+                            background: "rgba(255, 255, 255, 0.02)",
+                            border: "1px solid rgba(255, 255, 255, 0.1)",
+                          }}
+                        >
+                          <h6 className="text-light mb-3">Frequency Spectrum</h6>
+                          <img
+                            src={analysis.frequency_analysis_plot}
+                            alt="Frequency Spectrum"
+                            className="img-fluid rounded-3"
+                            style={{ boxShadow: "0 4px 20px rgba(0, 0, 0, 0.3)" }}
+                          />
+                        </div>
+                      </div>
+                    )}
+                    {analysis?.original_signal_plot && (
+                      <div className="col-lg-6">
+                        <div
+                          className="p-3 rounded-3"
+                          style={{
+                            background: "rgba(255, 255, 255, 0.02)",
+                            border: "1px solid rgba(255, 255, 255, 0.1)",
+                          }}
+                        >
+                          <h6 className="text-light mb-3">Training vs Testing Performance</h6>
+                          <img
+                            src={analysis.original_signal_plot}
+                            alt="Training vs Testing"
+                            className="img-fluid rounded-3"
+                            style={{ boxShadow: "0 4px 20px rgba(0, 0, 0, 0.3)" }}
+                          />
+                        </div>
+                      </div>
+                    )}
+                    {analysis?.fitted_signal_plot && (
+                      <div className="col-12">
+                        <div
+                          className="p-3 rounded-3"
+                          style={{
+                            background: "rgba(255, 255, 255, 0.02)",
+                            border: "1px solid rgba(255, 255, 255, 0.1)",
+                          }}
+                        >
+                          <h6 className="text-light mb-3">Original vs Reconstructed Signal</h6>
+                          <img
+                            src={analysis.fitted_signal_plot}
+                            alt="Original vs Reconstructed"
+                            className="img-fluid rounded-3"
+                            style={{ boxShadow: "0 4px 20px rgba(0, 0, 0, 0.3)" }}
+                          />
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Data Preview */}
+            {analysis?.data_preview && analysis.data_preview.length > 0 && (
+              <div
+                className="card mb-4"
+                style={{
+                  background: "rgba(255, 255, 255, 0.03)",
+                  backdropFilter: "blur(10px)",
+                  border: "1px solid rgba(255, 255, 255, 0.1)",
+                  borderRadius: "20px",
+                  boxShadow: "0 8px 32px rgba(0, 0, 0, 0.3)",
+                  transition: "all 0.3s ease",
+                  cursor: "pointer",
+                }}
+                onMouseOver={(e) => {
+                  e.currentTarget.style.transform = "translateY(-5px)"
+                  e.currentTarget.style.boxShadow = "0 15px 40px rgba(255, 193, 7, 0.4)"
+                  e.currentTarget.style.border = "1px solid rgba(255, 193, 7, 0.5)"
+                }}
+                onMouseOut={(e) => {
+                  e.currentTarget.style.transform = "translateY(0)"
+                  e.currentTarget.style.boxShadow = "0 8px 32px rgba(0, 0, 0, 0.3)"
+                  e.currentTarget.style.border = "1px solid rgba(255, 255, 255, 0.1)"
+                }}
+              >                <div className="card-body p-4">
+                  <div className="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-4 gap-3">
+                    <h4 className="text-light mb-0 d-flex align-items-center gap-3">
+                      <i className="fas fa-table" style={{ color: "#17a2b8" }}></i>
+                      DATA PREVIEW
+                      <span
+                        className="badge ms-2 px-2 py-1"
+                        style={{
+                          background: "rgba(23, 162, 184, 0.2)",
+                          color: "#17a2b8",
+                          borderRadius: "15px",
+                          fontSize: "0.7rem",
+                        }}
+                      >
+                        First 10 rows
+                      </span>
+                    </h4>
+                    {analysis?.uploaded_file && (
+                      <button
+                        onClick={handleDownloadCSV}
+                        className="btn px-4 py-2"
+                        style={{
+                          background: "transparent",
+                          border: "2px solid #28a745",
+                          borderRadius: "25px",
+                          color: "#28a745",
+                          fontWeight: "600",
+                          transition: "all 0.3s ease",
+                        }}
+                        onMouseOver={(e) => {
+                          e.target.style.transform = "translateY(-2px)"
+                          e.target.style.boxShadow = "0 8px 25px rgba(40, 167, 69, 0.4)"
+                          e.target.style.textShadow = "0 0 10px rgba(40, 167, 69, 0.6)"
+                        }}
+                        onMouseOut={(e) => {
+                          e.target.style.transform = "translateY(0)"
+                          e.target.style.boxShadow = "none"
+                          e.target.style.textShadow = "none"
+                        }}
+                        onFocus={(e) => {
+                          e.target.style.transform = "translateY(-2px)"
+                          e.target.style.boxShadow = "0 8px 25px rgba(40, 167, 69, 0.4)"
+                          e.target.style.textShadow = "0 0 10px rgba(40, 167, 69, 0.6)"
+                        }}
+                        onBlur={(e) => {
+                          e.target.style.transform = "translateY(0)"
+                          e.target.style.boxShadow = "none"
+                          e.target.style.textShadow = "none"
+                        }}
+                      >
+                        <i className="fas fa-download me-2"></i> DOWNLOAD CSV
+                      </button>
+                    )}
+                  </div>                  <div className="table-responsive">
+                    <table className="table table-dark table-hover">
+                      <thead>
+                        <tr style={{ borderBottom: "2px solid rgba(23, 162, 184, 0.3)" }}>
+                          <th className="py-3 px-4" style={{ background: "rgba(23, 162, 184, 0.1)" }}>
+                            X
+                          </th>
+                          <th className="py-3 px-4" style={{ background: "rgba(23, 162, 184, 0.1)" }}>
+                            Y
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {analysis.data_preview.slice(0, 10).map((row, index) => (
+                          <tr
+                            key={`data-row-${index}`}
+                            style={{
+                              borderBottom: "1px solid rgba(255, 255, 255, 0.1)",
+                              transition: "all 0.2s ease",
+                            }}
+                          >
+                            <td className="py-2 px-4 font-monospace">{typeof row.x === 'number' ? row.x.toFixed(3) : row.x}</td>
+                            <td className="py-2 px-4 font-monospace">{typeof row.y === 'number' ? row.y.toFixed(3) : row.y}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Navigation */}
             <div
               className="card mb-4"
               style={{

@@ -80,6 +80,14 @@ export const AuthProvider = ({ children }) => {
     }));
   };
 
+  const requestPasswordReset = async (data) => {
+    return authAPI.requestPasswordReset(data);
+  };
+
+  const confirmPasswordReset = async (data) => {
+    return authAPI.confirmPasswordReset(data);
+  };
+
   const value = useMemo(() => ({
     user,
     login,
@@ -88,7 +96,9 @@ export const AuthProvider = ({ children }) => {
     loading,
     updateUser,
     setUser,
-    isAuthenticated: !!user
+    isAuthenticated: !!user,
+    requestPasswordReset,
+    confirmPasswordReset
   }), [user, loading]);
 
   return (

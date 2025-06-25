@@ -733,7 +733,7 @@ const Results = () => {
                         >
                           <h6 className="text-light mb-3">Frequency Spectrum</h6>
                           <img
-                            src={`data:image/png;base64,${analysisResult.plots.frequency_spectrum}`}
+                            src={analysisResult.plots.frequency_spectrum}
                             alt="Frequency Spectrum"
                             className="img-fluid rounded-3"
                             style={{ boxShadow: "0 4px 20px rgba(0, 0, 0, 0.3)" }}
@@ -752,7 +752,7 @@ const Results = () => {
                         >
                           <h6 className="text-light mb-3">Original vs Reconstructed Signal</h6>
                           <img
-                            src={`data:image/png;base64,${analysisResult.plots.original_vs_reconstructed}`}
+                            src={analysisResult.plots.original_vs_reconstructed}
                             alt="Original vs Reconstructed"
                             className="img-fluid rounded-3"
                             style={{ boxShadow: "0 4px 20px rgba(0, 0, 0, 0.3)" }}
@@ -771,7 +771,7 @@ const Results = () => {
                         >
                           <h6 className="text-light mb-3">Training vs Testing Performance</h6>
                           <img
-                            src={`data:image/png;base64,${analysisResult.plots.training_vs_testing}`}
+                            src={analysisResult.plots.training_vs_testing}
                             alt="Training vs Testing"
                             className="img-fluid rounded-3"
                             style={{ boxShadow: "0 4px 20px rgba(0, 0, 0, 0.3)" }}

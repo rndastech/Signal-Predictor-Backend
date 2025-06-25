@@ -10,6 +10,10 @@ from .forms import (CSVUploadForm, FunctionEvaluationForm, SignalGeneratorForm, 
     UserProfileForm, UserForm, AnalysisShareForm, SharePasswordForm)
 from .models import SignalAnalysis, UserProfile
 from .signal_utils import SignalPredictor, SignalGenerator
+from django.core.files.base import ContentFile
+import base64, uuid
+
+MAX_ANALYSES_PER_USER = 50
 
 
 def assign_orphaned_analyses():
@@ -47,6 +51,14 @@ def home(request):
 def upload_csv(request):
     """Handle CSV upload and signal analysis"""
     if request.method == 'POST':
+        # Enforce maximum analyses per user
+        if request.user.is_authenticated:
+            current_count = SignalAnalysis.objects.filter(user=request.user).count()
+            if current_count >= MAX_ANALYSES_PER_USER:
+                messages.error(request, f'You have reached the maximum number of analyses ({MAX_ANALYSES_PER_USER}). Please delete previous analyses to continue.')
+                form = CSVUploadForm()
+                return render(request, 'predictor/upload.html', {'form': form})
+        
         form = CSVUploadForm(request.POST, request.FILES)
         if form.is_valid():
             try:
@@ -73,34 +85,45 @@ def upload_csv(request):
                 predictor = SignalPredictor()
                 result = predictor.analyze_signal(csv_data, split_point)
                 
-                if result['success']:                    # Auto-save to database for logged-in users
+                if result['success']:
+                    # Auto-save to database for logged-in users
                     analysis = None
                     if request.user.is_authenticated:
+                        csv_file = request.FILES['csv_file']
                         analysis = SignalAnalysis.objects.create(
                             user=request.user,
+                            uploaded_file=csv_file,
                             fitted_function=result['fitted_function'],
                             parameters=result['parameters'],
                             mse=result['mse'],
                             dominant_frequencies=result['dominant_frequencies']
                         )
-                        # Store predictor in session for function evaluation
-                        request.session['predictor_params'] = predictor.params.tolist()
-                        request.session['analysis_id'] = analysis.id
-                        
-                        # Clear any temporary analysis data since we auto-saved
-                        if 'temp_analysis' in request.session:
-                            del request.session['temp_analysis']
-                    
-                    else:
-                        # For anonymous users, store complete analysis data in session
-                        request.session['predictor_params'] = predictor.params.tolist()
-                        request.session['analysis_id'] = None
-                        request.session['temp_analysis'] = {
-                            'fitted_function': result['fitted_function'],
-                            'parameters': result['parameters'],
-                            'mse': result['mse'],
-                            'dominant_frequencies': result['dominant_frequencies']
-                        }
+                        # Save data preview (first 10 rows)
+                        analysis.set_data_preview(csv_data)
+                        # Save visualization plots
+                        plots = result.get('plots', {})
+                        # Frequency spectrum
+                        if plots.get('frequency_spectrum'):
+                            data = base64.b64decode(plots['frequency_spectrum'])
+                            filename = f"frequency_analysis_{analysis.id}_{uuid.uuid4().hex[:8]}.png"
+                            analysis.frequency_analysis_plot.save(filename, ContentFile(data), save=False)
+                        # Original vs reconstructed: save as original_signal_plot
+                        if plots.get('original_vs_reconstructed'):
+                            data = base64.b64decode(plots['original_vs_reconstructed'])
+                            filename = f"original_signal_{analysis.id}_{uuid.uuid4().hex[:8]}.png"
+                            analysis.original_signal_plot.save(filename, ContentFile(data), save=False)
+                        # Training vs testing performance: save as fitted_signal_plot
+                        if plots.get('training_vs_testing'):
+                            data = base64.b64decode(plots['training_vs_testing'])
+                            filename = f"fitted_signal_{analysis.id}_{uuid.uuid4().hex[:8]}.png"
+                            analysis.fitted_signal_plot.save(filename, ContentFile(data), save=False)
+                        # Persist all changes
+                        analysis.save()
+                    # Store predictor in session for function evaluation
+                    request.session['predictor_params'] = predictor.params.tolist()
+                    request.session['analysis_id'] = analysis.id if analysis else None
+                    # Clear any temporary analysis data
+                    request.session.pop('temp_analysis', None)
                     
                     # Redirect to results page
                     # Prepare rename form for authenticated users
@@ -213,15 +236,22 @@ def convert_stored_params_to_predictor_format(stored_parameters):
 
 @login_required
 def analysis_detail(request, analysis_id):
-    """View details of a specific analysis"""
+    """View details of a specific analysis with visualizations and data preview"""
     try:
         analysis = SignalAnalysis.objects.get(id=analysis_id, user=request.user)
         rename_form = AnalysisRenameForm(initial={'name': analysis.name})
-        return render(request, 'predictor/analysis_detail.html', {
+        
+        # Get additional data for display
+        context = {
             'analysis': analysis,
             'eval_form': FunctionEvaluationForm(),
-            'rename_form': rename_form
-        })
+            'rename_form': rename_form,
+            'has_visualizations': analysis.has_visualizations,
+            'data_preview': analysis.get_data_preview(),
+            'visualization_urls': analysis.get_visualization_urls(),
+        }
+        
+        return render(request, 'predictor/analysis_detail.html', context)
     except SignalAnalysis.DoesNotExist:
         messages.error(request, 'Analysis not found.')
         return redirect('home')
@@ -250,7 +280,6 @@ def save_session_analysis(request):
         if form.is_valid():
             try:
                 analysis_name = form.cleaned_data.get('name') or ""
-                
                 # Create the analysis from session data
                 analysis = SignalAnalysis.objects.create(
                     user=request.user,
@@ -260,12 +289,31 @@ def save_session_analysis(request):
                     mse=temp_analysis['mse'],
                     dominant_frequencies=temp_analysis['dominant_frequencies']
                 )
+                # Save data preview JSON
+                if 'data_preview' in temp_analysis:
+                    analysis.data_preview = temp_analysis['data_preview']
+                # Save visualization images from session
+                plots = temp_analysis.get('plots', {})
+                # frequency spectrum
+                if plots.get('frequency_spectrum'):
+                    img = base64.b64decode(plots['frequency_spectrum'])
+                    fname = f"frequency_analysis_{analysis.id}.png"
+                    analysis.frequency_analysis_plot.save(fname, ContentFile(img), save=False)
+                # original vs reconstructed => fitted_signal
+                if plots.get('original_vs_reconstructed'):
+                    img = base64.b64decode(plots['original_vs_reconstructed'])
+                    fname = f"fitted_signal_{analysis.id}.png"
+                    analysis.fitted_signal_plot.save(fname, ContentFile(img), save=False)
+                # training vs testing => original_signal
+                if plots.get('training_vs_testing'):
+                    img = base64.b64decode(plots['training_vs_testing'])
+                    fname = f"original_signal_{analysis.id}.png"
+                    analysis.original_signal_plot.save(fname, ContentFile(img), save=False)
+                analysis.save()
                 
-                # Update session with the saved analysis ID
+                # Update session and clear temporary data
                 request.session['analysis_id'] = analysis.id
-                # Remove temporary data
-                if 'temp_analysis' in request.session:
-                    del request.session['temp_analysis']
+                request.session.pop('temp_analysis', None)
                 
                 if analysis_name:
                     messages.success(request, f'Analysis "{analysis_name}" saved successfully!')
@@ -282,7 +330,7 @@ def save_session_analysis(request):
     else:
         # For backward compatibility, if it's a GET request, save without prompting for name
         try:
-            # Create the analysis from session data
+            # Create the analysis without name
             analysis = SignalAnalysis.objects.create(
                 user=request.user,
                 fitted_function=temp_analysis['fitted_function'],
@@ -290,14 +338,24 @@ def save_session_analysis(request):
                 mse=temp_analysis['mse'],
                 dominant_frequencies=temp_analysis['dominant_frequencies']
             )
-            
-            # Update session with the saved analysis ID
-            request.session['analysis_id'] = analysis.id
-            # Remove temporary data
-            if 'temp_analysis' in request.session:
-                del request.session['temp_analysis']
-            
-            messages.success(request, f'Analysis #{analysis.id} saved successfully!')
+            # Save preview and plots same as above
+            if 'data_preview' in temp_analysis:
+                analysis.data_preview = temp_analysis['data_preview']
+            plots = temp_analysis.get('plots', {})
+            if plots.get('frequency_spectrum'):
+                img = base64.b64decode(plots['frequency_spectrum'])
+                fname = f"frequency_analysis_{analysis.id}.png"
+                analysis.frequency_analysis_plot.save(fname, ContentFile(img), save=False)
+            if plots.get('original_vs_reconstructed'):
+                img = base64.b64decode(plots['original_vs_reconstructed'])
+                fname = f"fitted_signal_{analysis.id}.png"
+                analysis.fitted_signal_plot.save(fname, ContentFile(img), save=False)
+            if plots.get('training_vs_testing'):
+                img = base64.b64decode(plots['training_vs_testing'])
+                fname = f"original_signal_{analysis.id}.png"
+                analysis.original_signal_plot.save(fname, ContentFile(img), save=False)
+            analysis.save()
+             
             return redirect('analysis_detail', analysis_id=analysis.id)
             
         except Exception as e:
@@ -515,10 +573,17 @@ def profile_view(request):
     """Display user profile"""
     profile, _ = UserProfile.objects.get_or_create(user=request.user)
     
+    # Calculate quota usage for display
+    total_analyses = SignalAnalysis.objects.filter(user=request.user).count()
+    quota_total = MAX_ANALYSES_PER_USER
+    quota_percent = int((total_analyses / quota_total) * 100) if quota_total else 0
+    
     context = {
         'profile': profile,
-        'total_analyses': SignalAnalysis.objects.filter(user=request.user).count(),
+        'total_analyses': total_analyses,
         'recent_analyses': SignalAnalysis.objects.filter(user=request.user)[:5],
+        'quota_total': quota_total,
+        'quota_percent': quota_percent,
     }
     
     return render(request, 'predictor/profile.html', context)
@@ -592,12 +657,16 @@ def analysis_share(request, analysis_id):
             if form.is_valid():
                 pwd = form.cleaned_data['password']
                 if analysis.check_share_password(pwd):
-                    # access granted
-                    return render(request, 'predictor/analysis_detail.html', {
+                    # access granted - include visualization data
+                    context = {
                         'analysis': analysis,
                         'eval_form': FunctionEvaluationForm(),
-                        'shared': True
-                    })
+                        'shared': True,
+                        'has_visualizations': analysis.has_visualizations,
+                        'data_preview': analysis.get_data_preview(),
+                        'visualization_urls': analysis.get_visualization_urls(),
+                    }
+                    return render(request, 'predictor/analysis_detail.html', context)
                 else:
                     form.add_error('password', 'Incorrect password.')
         else:
@@ -606,9 +675,13 @@ def analysis_share(request, analysis_id):
             'analysis': analysis,
             'form': form
         })
-    # No password, render directly
-    return render(request, 'predictor/analysis_detail.html', {
+    # No password, render directly with visualization data
+    context = {
         'analysis': analysis,
         'eval_form': FunctionEvaluationForm(),
-        'shared': True
-    })
+        'shared': True,
+        'has_visualizations': analysis.has_visualizations,
+        'data_preview': analysis.get_data_preview(),
+        'visualization_urls': analysis.get_visualization_urls(),
+    }
+    return render(request, 'predictor/analysis_detail.html', context)

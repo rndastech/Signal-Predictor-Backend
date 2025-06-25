@@ -281,23 +281,14 @@ class SignalPredictor:
                 initial_guess.extend([amp, freq, phase_guess])
             # Use mean of training data as initial offset
             initial_guess.append(np.mean(y_train))
+            
 
-            # Global optimization with differential evolution to escape local minima
-            def _sse_obj(params):
-                return np.sum((y_train - self.multi_sinusoidal(x_train, *params))**2)
-
-            # Build bounds for (A, f, phi) per sinusoid and offset
-            bounds = []
-            max_amp = np.max(np.abs(y_train)) * 2
-            for _ in range(len(self.dominant_freqs)):
-                bounds += [(0, max_amp), (0, np.max(xf)), (-np.pi, np.pi)]
-            bounds.append((np.min(y_train), np.max(y_train)))
-
-            de_result = differential_evolution(_sse_obj, bounds, maxiter=1000, polish=False)
-            initial_guess = de_result.x.tolist()  # Override with global optimizer output
-
-            # Fit the multi-sinusoidal model using polished initial guess
-            self.params, _ = curve_fit(self.multi_sinusoidal, x_train, y_train, p0=initial_guess)
+            self.params, _ = curve_fit(
+                self.multi_sinusoidal,
+                x_train,
+                y_train,
+                p0=initial_guess,
+            )  
             
             # Test the model if test data exists
             if len(x_test) > 0:

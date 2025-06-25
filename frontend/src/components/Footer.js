@@ -32,8 +32,9 @@ const Footer = () => {
                   Advanced AI-Powered Signal Analysis & Predictive Modeling. 
                   Harness the power of Fourier Transform and machine learning 
                   for comprehensive signal analysis.
-                </p>                <div className="footer-social">
-                  <a href="https://github.com" className="social-link" aria-label="GitHub">
+                </p>
+                <div className="footer-social">
+                  <a href="https://github.com/rndastech/Signal-Predictor" className="social-link" aria-label="GitHub">
                     <i className="fab fa-github"></i>
                   </a>
                   <a href="https://www.linkedin.com/in/ritesh-narayan-das-6196b3268/" className="social-link" aria-label="LinkedIn">
@@ -70,7 +71,6 @@ const Footer = () => {
               <div className="footer-section">
                 <h5 className="footer-title">SUPPORT</h5>
                 <ul className="footer-links">
-                  <li><a href="#help">Help Center</a></li>
                   <li><a href="#contact">Contact Me</a></li>
                   <li><a href="#status">System Status</a></li>
                 </ul>

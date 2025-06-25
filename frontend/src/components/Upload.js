@@ -77,14 +77,8 @@ const Upload = () => {
       const response = await signalAPI.uploadCSV(formData);
       
       if (response.data.success) {
-        // Navigate to results page with analysis data
-        navigate('/results', { 
-          state: { 
-            analysisResult: response.data.result,
-            analysis: response.data.analysis,
-            tempAnalysis: response.data.temp_analysis 
-          } 
-        });
+        // Navigate to analysis detail page for the newly created analysis
+        navigate(`/analysis/${response.data.analysis.id}`);
       } else {
         setError(response.data.error || 'Upload failed');
       }

@@ -1,13 +1,27 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { profileAPI } from '../services/api';
 
 const Navbar = () => {
   const { user, logout, isAuthenticated } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
+  const [profileData, setProfileData] = useState(null);
   const [scrolled, setScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  // merge auth user with fetched profile data for avatar/name
+  const displayUser = { ...user, ...(profileData || {}) };
+
+  // load full profile for navbar display
+  useEffect(() => {
+    if (isAuthenticated) {
+      profileAPI.getProfile()
+        .then(res => setProfileData(res.data))
+        .catch(console.error);
+    }
+  }, [isAuthenticated]);
 
   const handleLogout = () => {
     logout();
@@ -104,21 +118,21 @@ const Navbar = () => {
               <li className="nav-item-futuristic">
                 <div className="user-profile-section">
                   <div className="user-avatar-container">
-                    {user?.profile_picture ? (
+                    {displayUser.profile_picture ? (
                       <img 
-                        src={user.profile_picture} 
-                        alt={user.username} 
+                        src={displayUser.profile_picture} 
+                        alt={displayUser.username} 
                         className="user-avatar-img" 
                       />
                     ) : (
                       <div className="user-avatar-placeholder">
-                        {user?.username?.charAt(0)?.toUpperCase()}
+                        {displayUser?.username?.charAt(0)?.toUpperCase()}
                       </div>
                     )}
                   </div>
                   <div className="user-info">
                     <span className="user-name">
-                      {user?.first_name || user?.username}
+                      {displayUser.first_name || displayUser.username}
                     </span>
                   </div>
                   <div className="user-actions">

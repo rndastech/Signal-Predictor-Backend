@@ -49,6 +49,11 @@
                         <p class="text-muted">{{ user.date_joined|date:"M Y" }}</p>
                     </div>
                 </div>
+                <hr>
+                <p class="mb-1">Quota Usage: {{ total_analyses }} / {{ quota_total }}</p>
+                <progress max="{{ quota_total }}" value="{{ total_analyses }}" class="w-100" aria-label="Quota usage">
+                    {{ quota_percent }}% used
+                </progress>
             </div>
         </div>
     </div>

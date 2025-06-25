@@ -25,7 +25,7 @@ SECRET_KEY = 'django-insecure-(qwc=9!!uj819&0s+)ynu$dai(-z30pex!h+w&(b=&%ld*wk5-
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['192.168.144.116','localhost','127.0.0.1']
+ALLOWED_HOSTS = ['192.168.229.116','localhost','127.0.0.1']
 
 
 # Application definition
@@ -166,7 +166,10 @@ CSRF_TRUSTED_ORIGINS = [
 
 # Allow CSRF cookie to be read by JavaScript
 CSRF_COOKIE_HTTPONLY = False
-CSRF_COOKIE_SAMESITE = 'Lax'
+CSRF_COOKIE_SAMESITE = None     # allow cross-site cookies for CSRF
+SESSION_COOKIE_SAMESITE = None  # allow cross-site cookies for sessions
+CSRF_COOKIE_SECURE = False      # set True if using HTTPS
+SESSION_COOKIE_SECURE = False   # set True if using HTTPS
 
 # REST Framework settings
 REST_FRAMEWORK = {
@@ -182,3 +185,13 @@ REST_FRAMEWORK = {
 }
 LOGIN_REDIRECT_URL = '/'
 LOGOUT_REDIRECT_URL = '/'
+
+# Email settings for password reset
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = 'careconnectiiita@gmail.com'
+EMAIL_HOST_PASSWORD = 'brey tsqp ianq hafw'
+DEFAULT_FROM_EMAIL = 'careconnectiiita@gmail.com'
+FRONTEND_BASE_URL = 'http://localhost:3000'

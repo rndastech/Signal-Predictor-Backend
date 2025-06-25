@@ -31,6 +31,19 @@ class UserProfileForm(forms.ModelForm):
             }),
         }
 
+    def clean_profile_picture(self):
+        picture = self.cleaned_data.get('profile_picture')
+        if picture:
+            # Validate content type
+            valid_types = ['image/jpeg', 'image/png', 'image/gif']
+            content_type = picture.content_type
+            if content_type not in valid_types:
+                raise forms.ValidationError('Please upload a JPEG, PNG, or GIF image.')
+            # Validate file size (<= 500KB)
+            if picture.size > 500 * 1024:
+                raise forms.ValidationError('Profile picture size should not exceed 500KB.')
+        return picture
+
 
 class UserForm(forms.ModelForm):
     class Meta:
@@ -98,6 +111,9 @@ class CSVUploadForm(forms.Form):
         file = self.cleaned_data['csv_file']
         if not file.name.endswith('.csv'):
             raise forms.ValidationError('Please upload a CSV file.')
+        # Validate file size (<= 10MB)
+        if file.size > 10 * 1024 * 1024:
+            raise forms.ValidationError('CSV file size should not exceed 10MB.')
         return file
 
 

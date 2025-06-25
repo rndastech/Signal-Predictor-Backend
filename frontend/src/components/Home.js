@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react"
 import { Link } from "react-router-dom"
 import { useAuth } from "../context/AuthContext"
-import { signalAPI } from "../services/api"
+import { signalAPI, profileAPI } from "../services/api"
 
 const Home = () => {
   const { user, isAuthenticated } = useAuth()
@@ -9,11 +9,24 @@ const Home = () => {
   const [totalAnalyses, setTotalAnalyses] = useState(0)
   const [loading, setLoading] = useState(false)
   const [mounted, setMounted] = useState(false)
+  const [profileData, setProfileData] = useState(null)
 
   useEffect(() => {
     setMounted(true)
     fetchHomeData()
   }, [isAuthenticated])
+
+  // load full profile data for avatar and name
+  useEffect(() => {
+    if (isAuthenticated) {
+      profileAPI.getProfile()
+        .then(res => setProfileData(res.data))
+        .catch(console.error)
+    }
+  }, [isAuthenticated])
+
+  // merge auth user with fetched profile data
+  const displayUser = { ...user, ...(profileData || {}) }
 
   const fetchHomeData = async () => {
     setLoading(true)
@@ -87,22 +100,22 @@ const Home = () => {
                     <div className="user-welcome-section">
                       <div className="d-flex align-items-center">
                         <div className="user-avatar-container">
-                          {user?.profile_picture ? (
+                          {displayUser.profile_picture ? (
                             <img
-                              src={user.profile_picture || "/placeholder.svg"}
-                              alt={user.username}
+                              src={displayUser.profile_picture || "/placeholder.svg"}
+                              alt={displayUser.username}
                               className="user-avatar"
                             />
                           ) : (
                             <div className="user-avatar user-avatar-fallback">
-                              {user?.username?.charAt(0)?.toUpperCase()}
+                              {displayUser?.username?.charAt(0)?.toUpperCase()}
                             </div>
                           )}
                         </div>
                         <div className="user-info">
                           <h3 className="user-welcome-text">
                             <i className="fas fa-user me-2"></i>
-                            Welcome back, {user?.first_name ? user.first_name : user?.username}!
+                            Welcome back, {displayUser.first_name ? displayUser.first_name : displayUser.username}!
                           </h3>
                           <Link to="/profile" className="profile-link">
                             Manage Profile <i className="fas fa-arrow-right"></i>
@@ -302,7 +315,7 @@ const Home = () => {
           </div>        )}
       </div>
 
-      <style jsx>{`
+      <style>{`
         .futuristic-home {
           min-height: 100vh;
           background: #000 !important;

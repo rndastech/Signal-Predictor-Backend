@@ -471,7 +471,7 @@ const AnalysisList = () => {
                                   fontSize: "0.75rem",
                                 }}
                               >
-                                {a.parameters?.components?.length || 0} components
+                                {a.parameters?.sinusoidal_components?.length || 0} components
                               </span>
                             </td>
                             <td className="py-3 px-4">
@@ -674,4 +674,4 @@ const AnalysisList = () => {
   )
 }
 
-export default AnalysisList;
+export default AnalysisList

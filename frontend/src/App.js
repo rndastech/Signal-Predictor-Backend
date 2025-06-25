@@ -16,21 +16,23 @@ import ShareOptions from './components/ShareOptions';
 import AnalysisSharePassword from './components/AnalysisSharePassword';
 import SharedAnalysisView from './components/SharedAnalysisView';
 import GeneratorResults from './components/GeneratorResults';
-import Results from './components/Results';
 import EditProfile from './components/EditProfile';
 import ChangePassword from './components/ChangePassword';
+import ForgotPassword from './components/ForgotPassword';
+import ResetPasswordConfirm from './components/ResetPasswordConfirm';
+import EmailVerificationSent from './components/EmailVerificationSent';
+import VerifyEmail from './components/VerifyEmail';
 
 function App() {
   return (
     <AuthProvider>
       <Router>
-        <Layout messages={[]}>  {/* Messages can be fetched from API later */}
+        <Layout messages={[]}>
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/upload" element={<Upload />} />
             <Route path="/signal-generator" element={<SignalGenerator />} />
             <Route path="/generator-results" element={<GeneratorResults />} />
-            <Route path="/results" element={<Results />} />
             <Route path="/login" element={<Login />} />
             <Route path="/signup" element={<Signup />} />
             <Route path="/profile" element={<Profile />} />
@@ -41,6 +43,10 @@ function App() {
             <Route path="/analysis/:analysisId/share/options" element={<ShareOptions />} />
             <Route path="/analysis/:analysisId/share/password" element={<AnalysisSharePassword />} />
             <Route path="/share/:analysisId" element={<SharedAnalysisView />} />
+            <Route path="/forgot-password" element={<ForgotPassword />} />
+            <Route path="/password-reset-confirm/:uid/:token" element={<ResetPasswordConfirm />} />
+            <Route path="/email-verification-sent" element={<EmailVerificationSent />} />
+            <Route path="/verify-email/:uid/:token" element={<VerifyEmail />} />
           </Routes>
         </Layout>
      </Router>

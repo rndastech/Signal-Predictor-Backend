@@ -21,6 +21,11 @@
                     <button class="btn btn-sm btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteModal">
                         <i class="fas fa-trash"></i> Delete
                     </button>
+                    {% if analysis.uploaded_file %}
+                    <a href="{{ analysis.uploaded_file.url }}" download class="btn btn-sm btn-outline-primary">
+                        <i class="fas fa-download"></i> Download CSV
+                    </a>
+                    {% endif %}
                     {% if request.user == analysis.user %}
                     <a href="{% url 'share_options' analysis.id %}" class="btn btn-sm btn-outline-info">
                         <i class="fas fa-share-alt"></i> Share
@@ -28,8 +33,100 @@
                     {% endif %}
                 </div>
                 {% endif %}
-            </div>
-            <div class="card-body">
+            </div>            <div class="card-body">
+                
+                <!-- Data Preview Section -->
+                {% if analysis.data_preview %}
+                <div class="mb-4">
+                    <h5><i class="fas fa-table"></i> Data Preview</h5>
+                    <div class="table-responsive">
+                        <table class="table table-sm table-striped">
+                            <thead>
+                                <tr>
+                                    <th>X</th>
+                                    <th>Y</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for row in analysis.data_preview %}
+                                <tr>
+                                    <td>{{ row.x|floatformat:3 }}</td>
+                                    <td>{{ row.y|floatformat:3 }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    <small class="text-muted">Showing first 10 rows of uploaded data</small>
+                </div>
+                {% endif %}
+
+                <!-- Visualization Plots -->
+                {% if analysis.has_visualizations %}
+                <div class="mb-4">
+                    <h5><i class="fas fa-chart-area"></i> Signal Analysis Visualizations</h5>
+                    
+                    <!-- Navigation tabs for plots -->
+                    <ul class="nav nav-tabs" id="plotTabs" role="tablist">
+                        {% if analysis.original_signal_plot %}
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link active" id="original-tab" data-bs-toggle="tab" data-bs-target="#original-plot" type="button" role="tab">
+                                <i class="fas fa-wave-square"></i> Original Signal
+                            </button>
+                        </li>
+                        {% endif %}
+                        {% if analysis.fitted_signal_plot %}
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link{% if not analysis.original_signal_plot %} active{% endif %}" id="fitted-tab" data-bs-toggle="tab" data-bs-target="#fitted-plot" type="button" role="tab">
+                                <i class="fas fa-project-diagram"></i> Fitted Signal
+                            </button>
+                        </li>
+                        {% endif %}
+                        {% if analysis.frequency_analysis_plot %}
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link{% if not analysis.original_signal_plot and not analysis.fitted_signal_plot %} active{% endif %}" id="frequency-tab" data-bs-toggle="tab" data-bs-target="#frequency-plot" type="button" role="tab">
+                                <i class="fas fa-signal"></i> Frequency Analysis
+                            </button>
+                        </li>
+                        {% endif %}
+                    </ul>
+                    
+                    <!-- Plot content -->
+                    <div class="tab-content mt-3" id="plotTabContent">
+                        {% if analysis.original_signal_plot %}
+                        <div class="tab-pane fade show active" id="original-plot" role="tabpanel">
+                            <div class="text-center">
+                                <img src="{{ analysis.original_signal_plot.url }}" class="img-fluid" alt="Original Signal Plot" style="max-height: 500px;">
+                                <p class="text-muted mt-2"><small>Original signal data visualization</small></p>
+                            </div>
+                        </div>
+                        {% endif %}
+                        {% if analysis.fitted_signal_plot %}
+                        <div class="tab-pane fade{% if not analysis.original_signal_plot %} show active{% endif %}" id="fitted-plot" role="tabpanel">
+                            <div class="text-center">
+                                <img src="{{ analysis.fitted_signal_plot.url }}" class="img-fluid" alt="Fitted Signal Plot" style="max-height: 500px;">
+                                <p class="text-muted mt-2"><small>Fitted sinusoidal function overlaid on original data</small></p>
+                            </div>
+                        </div>
+                        {% endif %}
+                        {% if analysis.frequency_analysis_plot %}
+                        <div class="tab-pane fade{% if not analysis.original_signal_plot and not analysis.fitted_signal_plot %} show active{% endif %}" id="frequency-plot" role="tabpanel">
+                            <div class="text-center">
+                                <img src="{{ analysis.frequency_analysis_plot.url }}" class="img-fluid" alt="Frequency Analysis Plot" style="max-height: 500px;">
+                                <p class="text-muted mt-2"><small>Frequency domain analysis and dominant frequencies</small></p>
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+                {% else %}
+                <div class="mb-4">
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle"></i> 
+                        <strong>Note:</strong> This analysis was created before visualization features were added. Visualizations are not available for this analysis.
+                    </div>
+                </div>
+                {% endif %}
                 
                 <!-- Fitted Function -->
                 <div class="mb-4">

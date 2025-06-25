@@ -22,15 +22,23 @@ class SignalAnalysisSerializer(serializers.ModelSerializer):
     user = UserSerializer(read_only=True)
     display_name = serializers.ReadOnlyField()
     user_analysis_count = serializers.ReadOnlyField()
+    visualization_urls = serializers.ReadOnlyField(source='get_visualization_urls')
+    has_visualizations = serializers.ReadOnlyField()
+    uploaded_file = serializers.FileField(read_only=True)
     
     class Meta:
         model = SignalAnalysis
         fields = [
-            'id', 'user', 'name', 'display_name', 'created_at', 
-            'fitted_function', 'parameters', 'mse', 'dominant_frequencies',
-            'is_public', 'user_analysis_count'
+            'id', 'user', 'name', 'display_name', 'created_at',
+            'uploaded_file', 'fitted_function', 'parameters', 'mse', 'dominant_frequencies',
+            'is_public', 'user_analysis_count', 'data_preview',
+            'original_signal_plot', 'fitted_signal_plot', 'frequency_analysis_plot',
+            'visualization_urls', 'has_visualizations'
         ]
-        read_only_fields = ['id', 'created_at', 'user', 'display_name', 'user_analysis_count']
+        read_only_fields = [
+            'id', 'created_at', 'user', 'display_name', 'user_analysis_count',
+            'uploaded_file', 'visualization_urls', 'has_visualizations'
+        ]
 
 
 class SignalAnalysisCreateSerializer(serializers.Serializer):
@@ -106,3 +114,19 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
 class UserLoginSerializer(serializers.Serializer):
     username = serializers.CharField()
     password = serializers.CharField()
+
+
+class PasswordResetRequestSerializer(serializers.Serializer):
+    email = serializers.EmailField()
+
+
+class PasswordResetSerializer(serializers.Serializer):
+    uid = serializers.CharField()
+    token = serializers.CharField()
+    new_password = serializers.CharField(write_only=True, min_length=8)
+    new_password_confirm = serializers.CharField(write_only=True, min_length=8)
+
+    def validate(self, data):
+        if data['new_password'] != data['new_password_confirm']:
+            raise serializers.ValidationError("Passwords don't match.")
+        return data

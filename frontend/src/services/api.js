@@ -51,7 +51,10 @@ export const authAPI = {
   register: (userData) => api.post('/auth/register/', userData),
   logout: () => api.post('/auth/logout/'),
   getCurrentUser: () => api.get('/auth/user/'),
+  verifyEmail: (uid, token) => api.get(`/auth/verify-email/${uid}/${token}/`),
   changePassword: (passwordData) => api.post('/auth/change-password/', passwordData),
+  requestPasswordReset: (data) => api.post('/auth/password-reset/', data),
+  confirmPasswordReset: (data) => api.post('/auth/password-reset-confirm/', data),
 };
 
 // Helper to read CSRF token from cookies

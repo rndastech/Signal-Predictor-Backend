@@ -24,22 +24,28 @@ const EditProfile = () => {
   const [success, setSuccess] = useState('');
 
   useEffect(() => {
-    // Load current user data
-    if (user) {
-      setFormData({
-        first_name: user.first_name || '',
-        last_name: user.last_name || '',
-        email: user.email || '',
-        bio: user.bio || '',
-        location: user.location || '',
-        birth_date: user.birth_date || '',
-        website: user.website || ''
-      });
-      
-      if (user.profile_picture) {
-        setPreviewUrl(user.profile_picture);
+    // Fetch full profile data from backend
+    const fetchProfile = async () => {
+      try {
+        const response = await profileAPI.getProfile();
+        const d = response.data;
+        setFormData({
+          first_name: d.first_name ?? user.first_name ?? '',
+          last_name:  d.last_name  ?? user.last_name  ?? '',
+          email:      d.email      ?? user.email      ?? '',
+          bio:        d.bio        ?? '',
+          location:   d.location   ?? '',
+          birth_date: d.birth_date ?? '',
+          website:    d.website    ?? ''
+        });
+        if (d.profile_picture) {
+          setPreviewUrl(d.profile_picture);
+        }
+      } catch (err) {
+        console.error('Error loading profile:', err);
       }
-    }
+    };
+    if (user) fetchProfile();
   }, [user]);
 
   const handleInputChange = (e) => {

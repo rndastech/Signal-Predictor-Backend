@@ -254,6 +254,42 @@
     margin-bottom: 25px;
   }
 
+  /* Center the colored dash under titles on mobile */
+  .footer-title::after {
+    left: 50%;
+    transform: translateX(-50%);
+  }
+
+  /* Center align footer links and remove left padding on mobile */
+  .footer-links a {
+    padding-left: 0;
+    display: block;
+    text-align: center;
+  }
+
+  .footer-links a::before {
+    display: none;
+  }
+
+  .footer-links a:hover {
+    padding-left: 0;
+  }
+
+  /* Center align footer link buttons */
+  .footer-link-button {
+    padding-left: 0;
+    text-align: center;
+    display: block;
+  }
+
+  .footer-link-button::before {
+    display: none;
+  }
+
+  .footer-link-button:hover {
+    padding-left: 0;
+  }
+
   .footer-meta {
     text-align: center;
     margin-top: 15px;

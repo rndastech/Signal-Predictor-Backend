@@ -11,6 +11,9 @@ const Profile = () => {
   const [totalAnalyses, setTotalAnalyses] = useState(0);
   const [loading, setLoading] = useState(true);
 
+  // merge auth user with fetched profile data
+  const displayUser = { ...user, ...(profileData || {}) };
+
   useEffect(() => {
     if (user) {
       loadProfileData();
@@ -94,10 +97,10 @@ const Profile = () => {
               }}
             >
               <div className="card-body text-center" style={{ padding: "2rem" }}>
-              {user?.profile_picture ? (
+              {displayUser.profile_picture ? (
                 <img 
-                  src={user.profile_picture} 
-                  alt={user.username} 
+                  src={displayUser.profile_picture} 
+                  alt={displayUser.username} 
                   className="rounded-circle mb-3" 
                   style={{ width: '150px', height: '150px', objectFit: 'cover' }}
                 />
@@ -113,21 +116,21 @@ const Profile = () => {
                     fontWeight: 'bold'
                   }}
                 >
-                  {user?.username?.charAt(0)?.toUpperCase()}
+                  {displayUser.username?.charAt(0)?.toUpperCase()}
                 </div>
               )}
               
               <h5 className="mb-1 text-warning">
-                {user?.first_name || user?.last_name 
-                  ? `${user?.first_name || ''} ${user?.last_name || ''}`.trim()
-                  : user?.username
+                {displayUser.first_name || displayUser.last_name
+                  ? `${displayUser.first_name || ''} ${displayUser.last_name || ''}`.trim()
+                  : displayUser.username
                 }
               </h5>
-              <p className="text-secondary mb-1">@{user?.username}</p>
-              {profileData?.location && (
+              <p className="text-secondary mb-1">@{displayUser.username}</p>
+              {displayUser.location && (
                 <p className="text-secondary mb-4">
                   <i className="fas fa-map-marker-alt me-2"></i>
-                  {profileData.location}
+                  {displayUser.location}
                 </p>
               )}
               
@@ -165,10 +168,28 @@ const Profile = () => {
                 <div className="col-sm-6">
                   <p className="mb-0 text-muted">Member Since</p>
                   <p className="text-warning fw-bold">
-                    {formatDate(user?.date_joined)}
+                    {formatDate(displayUser.date_joined)}
                   </p>
                 </div>
               </div>
+              
+              {/* Quota Usage */}
+              {profileData && profileData.quota_total && (
+                <>
+                  <hr className="bg-secondary" />
+                  <p className="mb-2 text-muted">
+                    Quota Usage: {totalAnalyses} / {profileData.quota_total}
+                  </p>
+                  <progress
+                    value={totalAnalyses}
+                    max={profileData.quota_total}
+                    className="w-100"
+                    aria-label="Quota usage"
+                  >
+                    {profileData.quota_percent}%
+                  </progress>
+                </>
+              )}
             </div>
           </div>
         </div>
@@ -195,8 +216,8 @@ const Profile = () => {
                 </div>
                 <div className="col-sm-9">
                   <p className="text-warning mb-0">
-                    {user?.first_name || user?.last_name 
-                      ? `${user?.first_name || ''} ${user?.last_name || ''}`.trim()
+                    {displayUser.first_name || displayUser.last_name 
+                      ? `${displayUser.first_name || ''} ${displayUser.last_name || ''}`.trim()
                       : <em className="text-muted">Not provided</em>
                     }
                   </p>
@@ -210,7 +231,7 @@ const Profile = () => {
                 </div>
                 <div className="col-sm-9">
                   <p className="text-warning mb-0">
-                    {user?.email || <em className="text-muted">Not provided</em>}
+                    {displayUser.email || <em className="text-muted">Not provided</em>}
                   </p>
                 </div>
               </div>
@@ -222,9 +243,9 @@ const Profile = () => {
                 </div>
                 <div className="col-sm-9">
                   <p className="text-warning mb-0">
-                    {profileData?.website ? (
-                      <a href={profileData.website} target="_blank" rel="noopener noreferrer" className="text-warning">
-                        {profileData.website}
+                    {displayUser.website ? (
+                      <a href={displayUser.website} target="_blank" rel="noopener noreferrer" className="text-warning">
+                        {displayUser.website}
                       </a>
                     ) : (
                       <em className="text-muted">Not provided</em>
@@ -240,15 +261,15 @@ const Profile = () => {
                 </div>
                 <div className="col-sm-9">
                   <p className="text-warning mb-0">
-                    {profileData?.birth_date 
-                      ? formatDate(profileData.birth_date)
+                    {displayUser.birth_date 
+                      ? formatDate(displayUser.birth_date)
                       : <em className="text-muted">Not provided</em>
                     }
                   </p>
                 </div>
               </div>
               
-              {profileData?.bio && (
+              {displayUser.bio && (
                 <>
                   <hr className="text-secondary" />
                   <div className="row mb-3">
@@ -256,7 +277,7 @@ const Profile = () => {
                       <p className="mb-0 text-secondary fw-bold">Bio</p>
                     </div>
                     <div className="col-sm-9">
-                      <p className="text-warning mb-0">{profileData.bio}</p>
+                      <p className="text-warning mb-0">{displayUser.bio}</p>
                     </div>
                   </div>
                 </>
@@ -264,14 +285,6 @@ const Profile = () => {
               
               <hr className="text-secondary" />
               <div className="d-flex gap-2">
-                <button 
-                  type="button" 
-                  className="btn btn-warning"
-                  onClick={handleEditProfile}
-                >
-                  <i className="fas fa-edit me-2"></i>
-                  Edit Profile
-                </button>
                 <button 
                   type="button" 
                   className="btn btn-outline-warning"
