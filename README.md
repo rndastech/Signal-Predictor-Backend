@@ -1,6 +1,6 @@
 <div align="center">
 
-![Signal Predictor Banner](https://via.placeholder.com/1200x300/000000/FFD700?text=🌊+SIGNAL+PREDICTOR+🔬+Advanced+Signal+Analysis+%26+Prediction+Platform)
+![Signal Predictor Banner](https://github.com/user-attachments/assets/8e4a5e4c-b816-4ce7-9d89-9ebec51b9af9)
 
 # 🌊 Signal Predictor (Backend)
 
