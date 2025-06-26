@@ -2,7 +2,7 @@
 
 ![Signal Predictor Banner](https://via.placeholder.com/1200x300/000000/FFD700?text=🌊+SIGNAL+PREDICTOR+🔬+Advanced+Signal+Analysis+%26+Prediction+Platform)
 
-# 🌊 Signal Predictor
+# 🌊 Signal Predictor (Backend)
 
 ### *Advanced Signal Analysis & Prediction Platform*
 
@@ -15,7 +15,7 @@
 
 **A cutting-edge full-stack web application for advanced time-series signal analysis using Fast Fourier Transform (FFT), multi-sinusoidal curve fitting, and machine learning techniques.**
 
-[🚀 **Live Demo**](#) • [📖 **Documentation**](#) • [🐛 **Report Bug**](#) • [💡 **Request Feature**](#)
+[🚀 **Live Demo**](#) 
 
 </div>
 
