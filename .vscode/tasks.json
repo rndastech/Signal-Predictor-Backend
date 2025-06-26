@@ -1,0 +1,16 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "Clean Templates",
+			"type": "shell",
+			"command": "powershell",
+			"args": [
+				"-Command",
+				"if (-not (Test-Path -Path './backend/templates/emails_backup')) { mkdir -p './backend/templates/emails_backup'; Copy-Item -Path './backend/templates/emails/*' -Destination './backend/templates/emails_backup/' -Recurse }"
+			],
+			"group": "build",
+			"problemMatcher": []
+		}
+	]
+}

@@ -1,6 +1,6 @@
-/* eslint-disable react/jsx-child-element-spacing, jsx-a11y/aria-role */
 import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, Navigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 import authService from '../services/authService';
 
 const Signup = () => {
@@ -17,6 +17,11 @@ const Signup = () => {
   const [message, setMessage] = useState('');
   
   const navigate = useNavigate();
+  const { isAuthenticated, loading: authLoading } = useAuth();
+
+  if (!authLoading && isAuthenticated) {
+    return <Navigate to="/" replace />;
+  }
 
   const handleChange = (e) => {
     setFormData({

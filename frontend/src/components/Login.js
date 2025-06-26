@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, Navigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
 const Login = () => {
@@ -10,9 +10,13 @@ const Login = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   
-  const { login } = useAuth();
+  const { login, isAuthenticated, loading: authLoading } = useAuth();
   const navigate = useNavigate();
 
+  if (!authLoading && isAuthenticated) {
+    return <Navigate to="/" replace />;
+  }
+  
   const handleChange = (e) => {
     setFormData({
       ...formData,
@@ -158,13 +162,11 @@ const Login = () => {
                   >
                     {loading ? (
                       <>
-                        <span className="spinner-border spinner-border-sm me-2" role="status"></span>
-                        Logging in...
+                        <span className="spinner-border spinner-border-sm me-2"></span>{' '}Logging in...
                       </>
                     ) : (
                       <>
-                        <i className="fas fa-sign-in-alt me-2"></i>
-                        LOGIN
+                        <i className="fas fa-sign-in-alt me-2"></i>{' '}LOGIN
                       </>
                     )}
                   </button>

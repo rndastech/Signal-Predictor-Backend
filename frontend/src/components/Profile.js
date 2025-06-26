@@ -61,20 +61,43 @@ const Profile = () => {
 
   if (loading) {
     return (
-      <div className="container-fluid">
-        <div className="row justify-content-center">
-          <div className="col-lg-8">
-            <div className="card floating-card">
-              <div className="card-body text-center">
-                <i className="fas fa-spinner fa-spin fa-2x text-warning mb-3"></i>
-                <p>Loading profile...</p>
+      <div
+        className="min-vh-100 d-flex align-items-center justify-content-center"
+        style={{
+          paddingTop: "80px",
+          background: "linear-gradient(135deg, #000000 0%, #1a1a1a 100%)",
+          fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, sans-serif",
+        }}
+      >
+        <div className="container-fluid px-4">
+          <div className="row justify-content-center">
+            <div className="col-lg-6 col-md-8">
+              <div
+                className="card"
+                style={{
+                  background: "rgba(255, 255, 255, 0.03)",
+                  backdropFilter: "blur(10px)",
+                  border: "1px solid rgba(255, 255, 255, 0.1)",
+                  borderRadius: "25px",
+                  boxShadow: "0 20px 40px rgba(0, 0, 0, 0.3)",
+                }}
+              >
+                <div className="card-body text-center" style={{ padding: "3rem" }}>
+                  <div className="mb-4">
+                    <i className="fas fa-spinner fa-spin fa-3x text-warning"></i>
+                  </div>
+                  <h5 className="text-warning mb-2">Loading Profile</h5>
+                  <p className="text-secondary mb-0">Please wait while we fetch your profile data...</p>
+                </div>
               </div>
             </div>
           </div>
         </div>
       </div>
     );
-  }  return (
+  }
+
+  return (
     <div
       className="min-vh-100"
       style={{

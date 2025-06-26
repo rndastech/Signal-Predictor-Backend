@@ -8,6 +8,7 @@ from django.core.validators import FileExtensionValidator
 from django.core.exceptions import ValidationError
 import os
 import uuid
+from .storage_backends import PublicMediaStorage
 
 # Constants
 ANALYSIS_PLOTS_DIR = 'analysis_plots/'
@@ -41,6 +42,7 @@ class UserProfile(models.Model):
         upload_to=user_profile_picture_upload_to,
         blank=True,
         null=True,
+        storage=PublicMediaStorage(),
         validators=[
             FileExtensionValidator(allowed_extensions=['jpg', 'jpeg', 'png', 'gif']),
             validate_image_size
@@ -69,16 +71,34 @@ def save_user_profile(sender, instance, **kwargs):
 class SignalAnalysis(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='signal_analyses', null=True, blank=True)
     name = models.CharField(max_length=100, blank=True, help_text="Custom name for this analysis")
-    uploaded_file = models.FileField(upload_to=csv_upload_to)
+    uploaded_file = models.FileField(
+        upload_to=csv_upload_to,
+        storage=PublicMediaStorage()
+    )
     created_at = models.DateTimeField(auto_now_add=True)
     fitted_function = models.TextField()
     parameters = models.JSONField()
     mse = models.FloatField(null=True, blank=True)
     dominant_frequencies = models.JSONField()    # Data preview and visualization fields
     data_preview = models.JSONField(null=True, blank=True, help_text="First 10 rows of the data")
-    original_signal_plot = models.ImageField(upload_to=ANALYSIS_PLOTS_DIR, blank=True, null=True)
-    fitted_signal_plot = models.ImageField(upload_to=ANALYSIS_PLOTS_DIR, blank=True, null=True)
-    frequency_analysis_plot = models.ImageField(upload_to=ANALYSIS_PLOTS_DIR, blank=True, null=True)
+    original_signal_plot = models.ImageField(
+        upload_to=ANALYSIS_PLOTS_DIR,
+        blank=True,
+        null=True,
+        storage=PublicMediaStorage()
+    )
+    fitted_signal_plot = models.ImageField(
+        upload_to=ANALYSIS_PLOTS_DIR,
+        blank=True,
+        null=True,
+        storage=PublicMediaStorage()
+    )
+    frequency_analysis_plot = models.ImageField(
+        upload_to=ANALYSIS_PLOTS_DIR,
+        blank=True,
+        null=True,
+        storage=PublicMediaStorage()
+    )
 
     # Add public/private sharing fields
     is_public = models.BooleanField(default=False)

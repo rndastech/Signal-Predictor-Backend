@@ -11,6 +11,8 @@ https://docs.djangoproject.com/en/4.2/ref/settings/
 """
 
 from pathlib import Path
+import os  # for environment variables
+from decouple import config
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -20,12 +22,16 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/4.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-(qwc=9!!uj819&0s+)ynu$dai(-z30pex!h+w&(b=&%ld*wk5-'
+SECRET_KEY = config('SECRET_KEY')  # loaded from .env
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = config('DEBUG', default=False, cast=bool)
 
-ALLOWED_HOSTS = ['192.168.229.116','localhost','127.0.0.1']
+ALLOWED_HOSTS = ['localhost', '127.0.0.1', 'rndastech.pages.dev']
+# Environment-provided host for deployment (e.g., Render app URL)
+RENDER_HOST = config('RENDER_HOST', default=None)
+if RENDER_HOST:
+    ALLOWED_HOSTS.append(RENDER_HOST)
 
 
 # Application definition
@@ -40,6 +46,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'corsheaders',
     'predictor',
+    'storages',
 ]
 
 MIDDLEWARE = [
@@ -79,8 +86,16 @@ WSGI_APPLICATION = 'signal_predictor.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.postgresql_psycopg2',
+        'NAME': config('DB_NAME'),
+        'USER': config('DB_USER'),
+        'PASSWORD': config('DB_PASSWORD'),
+        'HOST': config('DB_HOST'),
+        'PORT': config('DB_PORT'),
+        'OPTIONS': {
+            'sslmode': 'require',
+            'channel_binding': 'require',
+        },
     }
 }
 
@@ -119,14 +134,27 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/4.2/howto/static-files/
 
-STATIC_URL = 'static/'
-STATICFILES_DIRS = [
-    BASE_DIR / "static",
-]
-
 # Media files (User uploads)
-MEDIA_URL = '/media/'
-MEDIA_ROOT = BASE_DIR / 'media'
+# MEDIA_URL = '/media/'
+# MEDIA_ROOT = BASE_DIR / 'media'
+
+# Cloudflare R2 (S3-compatible) settings
+AWS_ACCESS_KEY_ID = config('AWS_ACCESS_KEY_ID')
+AWS_SECRET_ACCESS_KEY = config('AWS_SECRET_ACCESS_KEY')
+AWS_STORAGE_BUCKET_NAME = config('AWS_STORAGE_BUCKET_NAME')
+AWS_S3_REGION_NAME = config('AWS_S3_REGION_NAME')
+AWS_S3_ENDPOINT_URL = config('AWS_S3_ENDPOINT_URL')
+AWS_S3_SIGNATURE_VERSION = 's3v4'
+AWS_S3_FILE_OVERWRITE = False
+AWS_QUERYSTRING_AUTH = True
+AWS_DEFAULT_ACL = None
+AWS_S3_CUSTOM_DOMAIN = None 
+STATIC_LOCATION = 'static'
+MEDIA_LOCATION = 'media'
+STATIC_URL = f"/{STATIC_LOCATION}/"
+MEDIA_URL = f"/{MEDIA_LOCATION}/"
+STATICFILES_STORAGE = 'storages.backends.s3boto3.S3StaticStorage'
+DEFAULT_FILE_STORAGE = 'predictor.storage_backends.PrivateMediaStorage'
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
@@ -140,6 +168,7 @@ LOGIN_URL = '/login/'
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",  # React development server
     "http://127.0.0.1:3000",
+    "https://rndastech.pages.dev",
 ]
 
 CORS_ALLOW_CREDENTIALS = True
@@ -162,14 +191,20 @@ CORS_ALLOW_HEADERS = [
 CSRF_TRUSTED_ORIGINS = [
     "http://localhost:3000",
     "http://127.0.0.1:3000",
+    "https://rndastech.pages.dev",
 ]
 
 # Allow CSRF cookie to be read by JavaScript
 CSRF_COOKIE_HTTPONLY = False
 CSRF_COOKIE_SAMESITE = None     # allow cross-site cookies for CSRF
 SESSION_COOKIE_SAMESITE = None  # allow cross-site cookies for sessions
-CSRF_COOKIE_SECURE = False      # set True if using HTTPS
-SESSION_COOKIE_SECURE = False   # set True if using HTTPS
+CSRF_COOKIE_SECURE = True  # set True if using HTTPS
+SESSION_COOKIE_SECURE = True  # set True if using HTTPS
+
+SECURE_SSL_REDIRECT = True
+SECURE_HSTS_SECONDS = 31536000
+SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+SECURE_HSTS_PRELOAD = True
 
 # REST Framework settings
 REST_FRAMEWORK = {
@@ -187,11 +222,11 @@ LOGIN_REDIRECT_URL = '/'
 LOGOUT_REDIRECT_URL = '/'
 
 # Email settings for password reset
-EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_HOST = 'smtp.gmail.com'
-EMAIL_PORT = 587
-EMAIL_USE_TLS = True
-EMAIL_HOST_USER = 'careconnectiiita@gmail.com'
-EMAIL_HOST_PASSWORD = 'brey tsqp ianq hafw'
-DEFAULT_FROM_EMAIL = 'careconnectiiita@gmail.com'
-FRONTEND_BASE_URL = 'http://localhost:3000'
+EMAIL_BACKEND = config('EMAIL_BACKEND', default='django.core.mail.backends.smtp.EmailBackend')
+EMAIL_HOST = config('EMAIL_HOST', default='smtp.gmail.com')
+EMAIL_PORT = config('EMAIL_PORT', cast=int, default=587)
+EMAIL_USE_TLS = config('EMAIL_USE_TLS', cast=bool, default=True)
+EMAIL_HOST_USER = config('EMAIL_HOST_USER')
+EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD')
+DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL', default=config('EMAIL_HOST_USER'))
+FRONTEND_BASE_URL = config('FRONTEND_BASE_URL')
