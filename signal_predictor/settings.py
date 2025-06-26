@@ -27,7 +27,7 @@ SECRET_KEY = config('SECRET_KEY')  # loaded from .env
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = config('DEBUG', default=False, cast=bool)
 
-ALLOWED_HOSTS = ['localhost', '127.0.0.1', 'rndastech.pages.dev']
+ALLOWED_HOSTS = ['localhost', '127.0.0.1', 'signal-predictor.pages.dev']
 # Environment-provided host for deployment (e.g., Render app URL)
 RENDER_HOST = config('RENDER_HOST', default=None)
 if RENDER_HOST:
@@ -168,7 +168,7 @@ LOGIN_URL = '/login/'
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",  # React development server
     "http://127.0.0.1:3000",
-    "https://rndastech.pages.dev",
+    "https://signal-predictor.pages.dev",
 ]
 
 CORS_ALLOW_CREDENTIALS = True
@@ -191,7 +191,7 @@ CORS_ALLOW_HEADERS = [
 CSRF_TRUSTED_ORIGINS = [
     "http://localhost:3000",
     "http://127.0.0.1:3000",
-    "https://rndastech.pages.dev",
+    "https://signal-predictor.pages.dev",
 ]
 
 # Allow CSRF cookie to be read by JavaScript
