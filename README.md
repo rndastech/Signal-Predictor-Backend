@@ -15,7 +15,7 @@
 
 **A cutting-edge full-stack web application for advanced time-series signal analysis using Fast Fourier Transform (FFT), multi-sinusoidal curve fitting, and machine learning techniques.**
 
-[🚀 **Live Demo**](https://rndastech.pages.dev) 
+[🚀 **Live Demo**](https://signal-predictor.pages.dev/) 
 
 </div>
 
