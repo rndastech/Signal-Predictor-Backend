@@ -11,6 +11,7 @@ from django.middleware.csrf import get_token
 from django.views.decorators.csrf import ensure_csrf_cookie, csrf_exempt
 from django.utils.decorators import method_decorator
 from django.core.files.base import ContentFile
+from django.conf import settings
 import pandas as pd
 import io
 import json
@@ -189,7 +190,6 @@ class HomeView(APIView):
         return Response(data)
 
 
-@method_decorator(csrf_exempt, name='dispatch')
 class SignalAnalysisUploadView(APIView):
     parser_classes = [MultiPartParser, FormParser]
     permission_classes = [permissions.AllowAny]
@@ -491,7 +491,6 @@ class SignalAnalysisListView(generics.ListAPIView):
         return SignalAnalysis.objects.filter(user=self.request.user)
 
 
-@method_decorator(csrf_exempt, name='dispatch')
 class SignalAnalysisDetailView(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = SignalAnalysisSerializer
     permission_classes = [permissions.IsAuthenticated]
@@ -696,9 +695,8 @@ class AnalysisShareOptionsView(APIView):
         """Get current share settings for an analysis"""
         try:
             analysis = SignalAnalysis.objects.get(id=analysis_id, user=request.user)
-            # Generate frontend URL instead of API URL
-            frontend_base = 'http://localhost:3000'  # In production, this should be configurable
-            public_url = f'{frontend_base}/share/{analysis.id}'
+            # Generate frontend URL using configurable base URL
+            public_url = f'{settings.FRONTEND_BASE_URL}/share/{analysis.id}'
             
             return Response({
                 'id': analysis.id,
@@ -730,9 +728,8 @@ class AnalysisShareOptionsView(APIView):
                 
                 analysis.save()
                 
-                # Generate frontend URL instead of API URL
-                frontend_base = 'http://localhost:3000'  # In production, this should be configurable
-                public_url = f'{frontend_base}/share/{analysis.id}'
+                # Generate frontend URL using configurable base URL
+                public_url = f'{settings.FRONTEND_BASE_URL}/share/{analysis.id}'
                 
                 return Response({
                     'success': True,
