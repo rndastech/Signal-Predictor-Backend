@@ -196,8 +196,8 @@ CSRF_TRUSTED_ORIGINS = [
 
 # Allow CSRF cookie to be read by JavaScript
 CSRF_COOKIE_HTTPONLY = False
-CSRF_COOKIE_SAMESITE = None     # allow cross-site cookies for CSRF
-SESSION_COOKIE_SAMESITE = None  # allow cross-site cookies for sessions
+CSRF_COOKIE_SAMESITE = 'None'     # allow cross-site cookies for CSRF
+SESSION_COOKIE_SAMESITE = 'None'  # allow cross-site cookies for sessions
 CSRF_COOKIE_SECURE = True  # set True if using HTTPS
 SESSION_COOKIE_SECURE = True  # set True if using HTTPS
 
